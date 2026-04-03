@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { auth0 } from "@/lib/auth0";
 import { getPendingActionById, resolvePendingAction, writeAuditLog } from "@/lib/database";
+import { executeWithToken } from "@/lib/tokenVault";
+import { sendEmail } from "@/lib/tools/gmail";
 
 export async function POST(req: Request) {
   try {
@@ -22,12 +24,39 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Pending action not found or already resolved" }, { status: 404 });
     }
 
-    // Mark as approved
-    resolvePendingAction(actionId, "approved");
+    // Parse action data to know what to execute
+    let task = "";
+    let service = "";
+    let action = "";
+    
+    if (pendingAction.action_data) {
+      try {
+        const parsed = JSON.parse(pendingAction.action_data);
+        task = parsed.task || "";
+        service = parsed.service || "";
+        action = parsed.action || "";
+      } catch (e) {
+        console.error("Failed to parse action_data", e);
+      }
+    }
 
-    // Simulate token fingerprint (real vault fetch would go here)
-    const fingerprint = "a4f2";
-    const result = "Action executed successfully (human-approved)";
+    let fingerprint = "none";
+    let finalResult = "Action executed successfully (human-approved)";
+
+    if (service === "gmail" && action === "send") {
+      finalResult = await executeWithToken(userId, service, async (token: string) => {
+        fingerprint = `...${token.slice(-4)}`;
+        return await sendEmail(
+          token, 
+          "hello@vaultproxy.local", 
+          "Automated Response Requested", 
+          `VaultProxy Automated Delivery.\nTask Prompted: "${task}"`
+        );
+      });
+    }
+
+    // Mark as approved AFTER execution succeeds
+    resolvePendingAction(actionId, "approved");
 
     // Write audit log
     writeAuditLog({
@@ -36,10 +65,10 @@ export async function POST(req: Request) {
       token_fingerprint: fingerprint,
       decision: "allow",
       status: "success",
-      metadata: JSON.stringify({ approvedActionId: actionId, humanApproved: true, result }),
+      metadata: JSON.stringify({ approvedActionId: actionId, humanApproved: true, result: finalResult }),
     });
 
-    return NextResponse.json({ message: "Action approved and executing", result, fingerprint });
+    return NextResponse.json({ message: "Action approved and executing", result: finalResult, fingerprint });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
     console.error("[agent/approve] Error:", message);

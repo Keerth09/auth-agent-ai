@@ -119,7 +119,7 @@ export async function POST(req: Request) {
         finalResult = await executeWithToken(userId, service, async (token) => {
           // Identify scope reference string snippet
           tokenFingerprint = `...${token.slice(-4)}`;
-          return await summarizeEmails(token, 5);
+          return await summarizeEmails(token, task);
         });
       } else {
         throw new Error(`Execution environment tool for ${service}.${action} is currently undefined.`);
