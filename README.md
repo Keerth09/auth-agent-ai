@@ -19,6 +19,63 @@ Modern AI agents are often given **User Credentials** or long-lived **API Keys**
 
 Instead of giving an agent a key to your house, ACC acts as a **Temporal Vault**. It exchanges your identity for a one-time, task-bound token that expires the moment the agent finishes its work.
 
+## 🏗️ System Architecture
+
+```mermaid
+graph TD
+    %% Personas
+    User([👤 The User])
+    Agent([🤖 AI Agent])
+    
+    %% Core Components
+    subgraph "Agent Control Center (ACC Dashboard)"
+        Orchestrator[Agent Orchestrator]
+        PermEngine[Permission Engine]
+        Audit[Audit Logger]
+        DB[(Better-SQLite3 DB)]
+    end
+    
+    %% Vault System
+    subgraph "Security Layer"
+        Vault[ACC Token Vault]
+        Auth0[Auth0 Token Vault]
+    end
+    
+    %% External Systems
+    Connectors[System Connectors]
+    Gmail[Gmail / Slack / GCP]
+
+    %% Flow
+    User -->|Assigns Task| Orchestrator
+    Orchestrator -->|Decompose & Evaluate| PermEngine
+    PermEngine -->|Risk Decision| Orchestrator
+    
+    %% The Secretless Loop
+    Orchestrator -->|Request Short-lived Token| Vault
+    Vault -->|RFC 8693 Exchange| Auth0
+    Auth0 -->|Task-Bound Scoped Token| Vault
+    Vault -->|Disposable Token| Orchestrator
+    
+    %% Execution
+    Orchestrator -->|Execute Action| Connectors
+    Connectors -->|API Call| Gmail
+    
+    %% Governance
+    Orchestrator -->|Log Everything| Audit
+    Audit -->|Write Trace| DB
+    DB -->|Visual Audit Feed| User
+    
+    %% Human in the loop
+    Orchestrator -- "Requires Approval" --> User
+    User -- "Approve / Deny" --> Orchestrator
+
+    %% Styling
+    style User fill:#ebeeff,stroke:#5468ff,stroke-width:2px
+    style Auth0 fill:#fff3eb,stroke:#eb5424,stroke-width:2px
+    style Orchestrator fill:#f5faff,stroke:#0071e3,stroke-width:2px
+    style DB fill:#f5f5f7,stroke:#1d1d1f,stroke-width:1px
+```
+
 ## 🎭 The Security Personas
 - **👤 The User**: Maintains full ownership of their credentials.
 - **🤖 The Agent**: Operates in a "Secretless" environment, never seeing a refresh token.
