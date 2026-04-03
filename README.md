@@ -1,5 +1,4 @@
 <div align="center">
-  <img src="https://upload.wikimedia.org/wikipedia/commons/e/e0/Auth0_logo.svg" width="120" />
   <h1>🛡️ Agent Control Center (ACC)</h1>
   <p><b><i>The Zero-Trust Intelligence Layer for Autonomous AI Agents</i></b></p>
   <pre>
@@ -78,6 +77,8 @@ npm run dev
 ACC maintains a cryptographic audit log in **better-sqlite3**. Every action includes a **Token Fingerprint**, allowing you to trace exactly which Vault Exchange was used for which AI summary.
 
 <div align="center">
+  <br/>
+  <b>Developed by R Sai Dheeraj & A Keerthana</b>
   <br/>
   <sub>Developed for the Auth0 AI Identity Hackathon 2026</sub>
 </div>
