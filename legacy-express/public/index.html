@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Agent Control Center — Auth0 Token Vault</title>
+  <meta name="description" content="Production-grade AI agent authorization system powered by Auth0 Token Vault. Complete audit trails, human-in-the-loop approvals, and real-time permission enforcement." />
+  <meta name="theme-color" content="#0d0d12" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+
+<!-- ── Login Screen ──────────────────────────────────────────────────────── -->
+<div id="login-screen" class="screen hidden">
+  <div class="login-bg">
+    <div class="login-bg-grid"></div>
+    <div class="login-bg-glow"></div>
+  </div>
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="logo-icon">
+        <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="16" cy="16" r="14" stroke="url(#grad1)" stroke-width="2"/>
+          <path d="M10 16l4 4 8-8" stroke="url(#grad2)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <defs>
+            <linearGradient id="grad1" x1="0" y1="0" x2="32" y2="32">
+              <stop offset="0%" stop-color="#7c3aed"/>
+              <stop offset="100%" stop-color="#2563eb"/>
+            </linearGradient>
+            <linearGradient id="grad2" x1="0" y1="0" x2="32" y2="32">
+              <stop offset="0%" stop-color="#a78bfa"/>
+              <stop offset="100%" stop-color="#60a5fa"/>
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+      <div class="logo-text">
+        <span class="logo-brand">ACC</span>
+        <span class="logo-sub">Agent Control Center</span>
+      </div>
+    </div>
+    <h1 class="login-title">Authorized AI Agents</h1>
+    <p class="login-desc">Every agent action is permission-checked, token-vaulted, and fully audited. Powered by Auth0 for AI Agents.</p>
+    <div class="login-features">
+      <div class="feature-pill"><span class="feature-dot green"></span>Auth0 Token Vault</div>
+      <div class="feature-pill"><span class="feature-dot violet"></span>Permission Engine</div>
+      <div class="feature-pill"><span class="feature-dot blue"></span>Human-in-the-Loop</div>
+      <div class="feature-pill"><span class="feature-dot amber"></span>Audit Trail</div>
+    </div>
+    <a id="login-btn" href="/auth/login" class="btn btn-primary btn-lg" aria-label="Login with Auth0">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+      Connect with Auth0
+    </a>
+    <p class="login-note">Google OAuth via Token Vault — zero credential exposure</p>
+  </div>
+</div>
+
+<!-- ── Main App ──────────────────────────────────────────────────────────── -->
+<div id="app-screen" class="screen hidden">
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">
+        <div class="logo-icon-sm">
+          <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="16" cy="16" r="14" stroke="url(#grad-sm)" stroke-width="2"/>
+            <path d="M10 16l4 4 8-8" stroke="#a78bfa" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <defs><linearGradient id="grad-sm" x1="0" y1="0" x2="32" y2="32"><stop offset="0%" stop-color="#7c3aed"/><stop offset="100%" stop-color="#2563eb"/></linearGradient></defs>
+          </svg>
+        </div>
+        <span class="sidebar-brand">ACC</span>
+      </div>
+      <div class="sidebar-version">v1.0.0</div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <button class="nav-item active" data-tab="dashboard" onclick="switchTab('dashboard')" aria-label="Dashboard">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+        Dashboard
+      </button>
+      <button class="nav-item" data-tab="agent" onclick="switchTab('agent')" aria-label="Run Agent">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M20.188 10.934a9 9 0 1 1-16.376 0"/><path d="M12 2v4"/><path d="M12 18v4"/></svg>
+        Run Agent
+        <span class="nav-badge" id="nav-pending-count" style="display:none">0</span>
+      </button>
+      <button class="nav-item" data-tab="approvals" onclick="switchTab('approvals')" aria-label="Approvals">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        Approvals
+        <span class="nav-badge urgent" id="nav-approvals-count" style="display:none">0</span>
+      </button>
+      <button class="nav-item" data-tab="tokens" onclick="switchTab('tokens')" aria-label="Token Vault">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+        Token Vault
+      </button>
+      <button class="nav-item" data-tab="logs" onclick="switchTab('logs')" aria-label="Audit Logs">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+        Audit Logs
+      </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="user-card" id="user-card">
+        <div class="user-avatar" id="user-avatar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </div>
+        <div class="user-info">
+          <div class="user-name" id="user-name">Loading...</div>
+          <div class="user-email" id="user-email">—</div>
+        </div>
+      </div>
+      <a href="/auth/logout" class="btn btn-ghost btn-sm" id="logout-btn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Sign out
+      </a>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+
+    <!-- ── Dashboard Tab ───────────────────────────────────────── -->
+    <section class="tab-panel active" id="tab-dashboard">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Control Center</h1>
+          <p class="page-subtitle">Real-time agent activity and security status</p>
+        </div>
+        <div class="header-actions">
+          <button class="btn btn-ghost btn-sm" onclick="refreshAll()" aria-label="Refresh data">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+            Refresh
+          </button>
+        </div>
+      </div>
+
+      <!-- Stats Row -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon green"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+          <div class="stat-body">
+            <div class="stat-value" id="stat-completed">—</div>
+            <div class="stat-label">Tasks Completed</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon amber"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+          <div class="stat-body">
+            <div class="stat-value" id="stat-pending">—</div>
+            <div class="stat-label">Awaiting Approval</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon red"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div>
+          <div class="stat-body">
+            <div class="stat-value" id="stat-denied">—</div>
+            <div class="stat-label">Actions Denied</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon violet"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+          <div class="stat-body">
+            <div class="stat-value" id="stat-vault">Active</div>
+            <div class="stat-label">Token Vault</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live Activity Feed -->
+      <div class="section-card">
+        <div class="section-header">
+          <h2 class="section-title">
+            <span class="pulse-dot"></span>
+            Live Activity Feed
+          </h2>
+          <span class="section-count" id="feed-count">0 events</span>
+        </div>
+        <div class="activity-feed" id="activity-feed">
+          <div class="feed-empty">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+            <p>No activity yet. Run an agent task to see live events.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Permission Architecture -->
+      <div class="section-card">
+        <div class="section-header">
+          <h2 class="section-title">Permission Architecture</h2>
+          <span class="badge badge-info">Live Rules</span>
+        </div>
+        <div class="permission-table" id="permission-table">
+          <div class="table-header">
+            <span>Action</span>
+            <span>Decision</span>
+            <span>Risk Level</span>
+            <span>Reason</span>
+          </div>
+          <div id="permission-rows">
+            <!-- Loaded dynamically -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Agent Tab ───────────────────────────────────────────── -->
+    <section class="tab-panel" id="tab-agent">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Run Agent</h1>
+          <p class="page-subtitle">Submit tasks — the agent handles authorization automatically</p>
+        </div>
+      </div>
+
+      <div class="two-col">
+        <!-- Task Input -->
+        <div class="section-card">
+          <div class="section-header">
+            <h2 class="section-title">New Task</h2>
+          </div>
+          <div class="task-form">
+            <div class="form-group">
+              <label class="form-label" for="task-input">Task Description</label>
+              <textarea
+                id="task-input"
+                class="form-textarea"
+                placeholder="e.g. Summarize my last 5 emails&#10;e.g. Send email to test@example.com"
+                rows="4"
+                maxlength="1000"
+              ></textarea>
+              <div class="form-hint">The agent will decompose this into actions and check permissions for each.</div>
+            </div>
+            <div class="quick-tasks">
+              <div class="quick-label">Quick tasks:</div>
+              <button class="quick-btn" onclick="setTask('Summarize my last 5 emails')">📧 Read emails</button>
+              <button class="quick-btn" onclick="setTask('Send email to demo@example.com with subject Test')">📤 Send email</button>
+              <button class="quick-btn" onclick="setTask('Delete all emails')">🗑️ Delete emails</button>
+            </div>
+            <button class="btn btn-primary btn-full" id="run-agent-btn" onclick="runAgent()" aria-label="Run agent task">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+              Run Agent
+            </button>
+          </div>
+        </div>
+
+        <!-- Last Run Result -->
+        <div class="section-card">
+          <div class="section-header">
+            <h2 class="section-title">Last Run</h2>
+            <span id="run-status-badge" class="badge" style="display:none"></span>
+          </div>
+          <div id="run-result">
+            <div class="run-empty">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+              <p>No runs yet. Submit a task above.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Runs -->
+      <div class="section-card">
+        <div class="section-header">
+          <h2 class="section-title">Recent Runs</h2>
+          <button class="btn btn-ghost btn-sm" onclick="loadRuns()">Refresh</button>
+        </div>
+        <div id="runs-list">
+          <div class="feed-empty"><p>No recent runs.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Approvals Tab ───────────────────────────────────────── -->
+    <section class="tab-panel" id="tab-approvals">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Human-in-the-Loop</h1>
+          <p class="page-subtitle">Actions flagged by the permission engine for your review</p>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="loadPending()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+          Refresh
+        </button>
+      </div>
+
+      <div class="approval-notice">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span>Actions with <strong>require_approval</strong> permission decision are held here. You must explicitly approve or deny before the agent executes them.</span>
+      </div>
+
+      <div id="pending-list">
+        <div class="section-card">
+          <div class="feed-empty">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            <p>No actions awaiting approval. The queue is clear.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Token Vault Tab ─────────────────────────────────────── -->
+    <section class="tab-panel" id="tab-tokens">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Token Vault</h1>
+          <p class="page-subtitle">Auth0-managed OAuth connections — zero credential exposure</p>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="loadTokens()">Refresh</button>
+      </div>
+
+      <div class="vault-explainer section-card">
+        <div class="vault-explainer-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        </div>
+        <div>
+          <div class="vault-explainer-title">How Token Vault Works</div>
+          <div class="vault-explainer-text">
+            When an agent needs to call Gmail, it performs a <strong>Token Exchange (RFC 8693)</strong> with Auth0. Auth0 returns a short-lived, scoped access token from the vault — your refresh tokens never leave Auth0 infrastructure.
+          </div>
+        </div>
+      </div>
+
+      <div id="connections-list">
+        <div class="section-card">
+          <div class="feed-empty"><p>Loading connections...</p></div>
+        </div>
+      </div>
+
+      <!-- Revocation Demo -->
+      <div class="section-card">
+        <div class="section-header">
+          <h2 class="section-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+            Token Revocation Demo
+          </h2>
+          <span class="badge badge-danger">Destructive</span>
+        </div>
+        <div class="revoke-warning">
+          <p>Revoking a connection deletes the Auth0 grant via Management API (<code>DELETE /api/v2/grants/{id}</code>). After revocation, any agent call using this connection will immediately fail with a 401 error — demonstrating that the Token Vault enforces authorization boundaries.</p>
+        </div>
+        <div class="revoke-controls">
+          <select class="form-select" id="revoke-connection-select">
+            <option value="google-oauth2">google-oauth2 (Gmail)</option>
+          </select>
+          <button class="btn btn-danger" id="revoke-btn" onclick="revokeToken()" aria-label="Revoke connection">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+            Revoke Connection
+          </button>
+        </div>
+        <div id="revoke-result" class="hidden"></div>
+      </div>
+    </section>
+
+    <!-- ── Audit Logs Tab ──────────────────────────────────────── -->
+    <section class="tab-panel" id="tab-logs">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Audit Logs</h1>
+          <p class="page-subtitle">Complete trace of every agent action, token, scope, and decision</p>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="loadLogs()">Refresh</button>
+      </div>
+
+      <!-- Filters -->
+      <div class="log-filters section-card">
+        <div class="filter-group">
+          <label class="form-label" for="filter-action">Action</label>
+          <select class="form-select" id="filter-action" onchange="loadLogs()">
+            <option value="">All Actions</option>
+            <option value="read_email">read_email</option>
+            <option value="send_email">send_email</option>
+            <option value="delete_email">delete_email</option>
+            <option value="token_revoked">token_revoked</option>
+            <option value="agent_start">agent_start</option>
+            <option value="agent_complete">agent_complete</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label class="form-label" for="filter-status">Status</label>
+          <select class="form-select" id="filter-status" onchange="loadLogs()">
+            <option value="">All Statuses</option>
+            <option value="success">Success</option>
+            <option value="failed">Failed</option>
+            <option value="pending">Pending</option>
+            <option value="revoked">Revoked</option>
+            <option value="denied">Denied</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label class="form-label" for="filter-decision">Decision</label>
+          <select class="form-select" id="filter-decision" onchange="loadLogs()">
+            <option value="">All Decisions</option>
+            <option value="allow">Allow</option>
+            <option value="deny">Deny</option>
+            <option value="require_approval">Require Approval</option>
+            <option value="require_step_up_auth">Step-Up Auth</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Log Table -->
+      <div class="section-card">
+        <div class="log-table" id="log-table">
+          <div class="log-table-header">
+            <span>Timestamp</span>
+            <span>Action</span>
+            <span>Decision</span>
+            <span>Status</span>
+            <span>Token</span>
+            <span>Scopes</span>
+          </div>
+          <div id="log-rows">
+            <div class="feed-empty"><p>Loading logs...</p></div>
+          </div>
+        </div>
+        <div class="log-pagination">
+          <button class="btn btn-ghost btn-sm" id="log-prev" onclick="changePage(-1)" disabled>← Prev</button>
+          <span id="log-page-info" class="page-info">Page 1</span>
+          <button class="btn btn-ghost btn-sm" id="log-next" onclick="changePage(1)">Next →</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ── Toast Notifications ────────────────────────────────────────────────── -->
+<div id="toast-container" aria-live="polite"></div>
+
+<script src="/app.js"></script>
+</body>
+</html>
