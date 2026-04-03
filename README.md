@@ -1,92 +1,98 @@
-# Agent Control Center (ACC) — Next.js Edition
-### Authorized AI Agents using Auth0 Token Vault & Official SDK
+# 🛡️ Agent Control Center (ACC)
+### *Next-Generation Zero-Trust Orchestration for AI Agents*
 
-> This project has been migrated to **Next.js** using the official `@auth0/nextjs-auth0` SDK for production-grade server-side session management and the new Auth0 Proxy/Middleware pattern.
+[![Auth0](https://img.shields.io/badge/Auth0-Verified-orange?style=flat-square&logo=auth0)](https://auth0.com)
+[![Next.js](https://img.shields.io/badge/Next.js-15+-black?style=flat-square&logo=next.js)](https://nextjs.org)
+[![Security](https://img.shields.io/badge/Security-RFC%208693-blue?style=flat-square)](https://datatracker.ietf.org/doc/html/rfc8693)
+[![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
 
----
-
-## Architecture (Next.js v16)
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                   Next.js Application                       │
-│                                                             │
-│  ┌──────────┐      ┌──────────────┐      ┌─────────────┐    │
-│  │  App     │─────▶│  Proxy Layer │─────▶│   Auth0     │    │
-│  │  Router  │      │  (proxy.js)  │      │   SDK       │    │
-│  └──────────┘      └──────────────┘      └─────────────┘    │
-│        │                                         │          │
-│        ▼                                         ▼          │
-│  ┌──────────┐      ┌──────────────┐      ┌─────────────┐    │
-│  │  API     │─────▶│  Permission  │─────▶│ Token Vault │    │
-│  │  Routes  │      │  Engine      │      │ (RFC 8693)  │    │
-│  └──────────┘      └──────────────┘      └─────────────┘    │
-│                                                             │
-│  ┌───────────────────────────────────────────────────────┐  │
-│  │               SQLite Persistent Audit Log             │  │
-│  └───────────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────────┘
-```
+**Agent Control Center** is a production-grade security bridge for AI Agents. It decouples agent logic from user identity using **Auth0 Token Vault**, enabling agents to perform sensitive tasks (like summarizing Gmail) without ever seeing a single long-lived credential.
 
 ---
 
-## Quick Start
+## 🚀 Key Features
 
-### 1. Install Dependencies
+*   **🔒 Token Vault Integration (RFC 8693)**: Uses OAuth 2.0 Token Exchange to convert user identities into short-lived, connection-specific access tokens.
+*   **🚦 Human-in-the-Loop (HITL)**: High-risk actions (e.g., deleting drafts, sending emails) require manual one-tap approval from the dashboard.
+*   **🛡️ Permission Engine**: A "Deny-by-Default" security layer that monitors every agent action against a granular policy.
+*   **📜 Immutable Audit Trail**: Every single API call, decision, and token exchange is logged with cryptographic fingerprints.
+*   **⚡ Next.js 15+ Core**: Built on the latest App Router architecture with serverless-ready route handlers.
+*   **🎨 Premium UI**: Apple-style dark mode dashboard with real-time activity feeds and security stats.
 
-```bash
-npm install
+---
+
+## 🏗️ Architecture
+
+```mermaid
+graph TD
+    User((User)) -->|Logs in| Dashboard[ACC Dashboard]
+    Dashboard -->|Task Request| Orchestrator[Agent Orchestrator]
+    Orchestrator -->|Request Token| Vault[Auth0 Token Vault]
+    Vault -->|RFC 8693 Exchange| Orchestrator
+    Orchestrator -->|Check Rules| Guard[Permission Engine]
+    Guard -->|High Risk| User
+    User -->|Approve| Guard
+    Guard -->|Allow| Service[Gmail / External API]
+    Service -->|Result| User
 ```
+
+---
+
+## 🛠️ Tech Stack
+
+- **Frontend**: Next.js, React, Vanilla CSS (Premium Dark Theme)
+- **Security**: @auth0/nextjs-auth0 (V4 SDK), RFC 8693 Token Exchange
+- **Database**: SQLite (better-sqlite3) for persistent audit logs
+- **Language**: TypeScript (Strict Mode)
+
+---
+
+## 📦 Getting Started
+
+### 1. Requirements
+- Node.js 22+
+- Auth0 Tenant with **Connected Accounts** enabled.
 
 ### 2. Configure Environment
-
 Create a `.env.local` file:
+```bash
+# Auth0 App Config
+AUTH0_SECRET='use [openssl rand -hex 32]'
+AUTH0_BASE_URL='http://localhost:3000'
+AUTH0_DOMAIN='your-tenant.auth0.com'
+AUTH0_CLIENT_ID='...'
+AUTH0_CLIENT_SECRET='...'
 
-```env
-APP_BASE_URL=http://localhost:3000
-AUTH0_DOMAIN=dev-sgx1i7zrhkhn5j0t.us.auth0.com
-AUTH0_CLIENT_ID=pOutPfG977WbXs53S0GetIg0WmbWO9Eq
-AUTH0_CLIENT_SECRET=YOUR_AUTH0_CLIENT_SECRET
-AUTH0_SECRET=e73b1c3e76b2756cbb9ac7318f6441ad5598d5ab311cd1d1acb5d10c3249a551
+# Token Vault
+AUTH0_CONNECTION_GOOGLE='google-oauth2'
 ```
 
-### 3. Run Development Server
-
+### 3. Install and Run
 ```bash
+npm install
 npm run dev
 ```
-
-Visit: **http://localhost:3000**
-
----
-
-## Migrated Features from Express to Next.js
-
-| Feature | Next.js Implementation | Key SDK API |
-|---|---|---|
-| **Auth Session** | Server-side HTTP-only cookies | `auth0.getSession()` |
-| **Proxy Layer** | `proxy.js` (Next 16+) / `middleware.js` | `auth0.middleware(request)` |
-| **Token Exchange** | RFC 8693 via Subject ID Token | `session.idToken` |
-| **Agent API** | Route Handlers in `app/api/agent` | `NextResponse.json()` |
-| **Persistence** | Shared SQLite (`lib/database.ts`) | `better-sqlite3` |
-| **Frontend** | React Client Component Dashboard | `use client` |
+Navigate to `http://localhost:3000`.
 
 ---
 
-## Demo Flow
+## 🛡️ Security Posture
 
-1. **Login**: Click "Login" (redirects via `/auth/login`).
-2. **Authorize**: Grant Gmail scopes to the AI Agent.
-3. **Execute**: Run a task like "Summarize my emails".
-4. **Approve**: For sensitive actions (Send Email), use the **Approvals** tab.
-5. **Revoke**: Use the **Token Vault** tab to delete the Auth0 grant via Management API.
-6. **Verify 401**: Re-run the agent after revocation to see the Token Vault fail securely.
+### Secretless Execution
+The Agent logic runs in a "Secretless" environment. It never handles User Refresh Tokens. Instead, it requests a 1-hour scoped token from the Vault for the specific sub-task, minimizing the impact of any potential breach.
+
+### Granular Guardrails
+Unlike generic AI agents, ACC defines strict rules:
+- `gmail.list`: **Allow** (Low Risk)
+- `gmail.send`: **Approval Required** (High Risk)
+- `gmail.delete`: **Deny** (Critical Risk)
 
 ---
 
-## Security Guarantees
+## 🏆 Hackathon Goals
+- [x] Full Migration from Legacy Express to Next.js Modern Stack.
+- [x] Zero-Trust Token Exchange Implementation.
+- [x] Real-time Audit Trail & Approval Queue.
+- [x] Premium Minimal UX.
 
-- **No Persisted Secrets**: Access tokens are fetched freshly per agent action and nunca stored.
-- **Human-in-the-Loop**: High-risk actions (Send/Delete) require explicit human approval via the Permission Engine.
-- **Audit Integrity**: Every decision is logged to an append-only SQLite database with token fingerprinting.
-- **Strict Boundaries**: Deny-by-default logic for any action not explicitly allowed in `lib/permissions/permissionRules.ts`.
+Developed with ❤️ for the Auth0 AI Hackathon.
