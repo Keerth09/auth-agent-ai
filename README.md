@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="https://auth0.com/blog/images/auth0-logo-blue.png" width="100" />
+  <img src="https://upload.wikimedia.org/wikipedia/commons/e/e0/Auth0_logo.svg" width="120" />
   <h1>🛡️ Agent Control Center (ACC)</h1>
   <p><b><i>The Zero-Trust Intelligence Layer for Autonomous AI Agents</i></b></p>
   <pre>
