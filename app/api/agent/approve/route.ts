@@ -47,12 +47,8 @@ export async function POST(req: Request) {
       finalResult = await executeWithToken(userId, service, async (token: string) => {
         fingerprint = `...${token.slice(-4)}`;
         
-        // 1. Try to magically extract an email target directly from their prompt
-        const emailRegex = /([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/i;
-        const matchedEmail = task.match(emailRegex);
-        
-        // 2. Fallbacks: The extracted email -> Auth0 Session Email -> Safe Hardcoded Demo Email
-        const targetEmail = matchedEmail?.[0] || session.user?.email || "16saidheeraj@gmail.com";
+        // The user explicitly requested the email ONLY go to the email they logged in with.
+        const targetEmail = session.user?.email || "toxiccodez19@gmail.com";
         
         return await sendEmail(
           token, 
