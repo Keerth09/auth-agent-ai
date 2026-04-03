@@ -194,37 +194,39 @@ export default function Dashboard() {
 
   return (
     <div className="screen" id="app-screen">
-      {/* Sidebar */}
+      {/* Sidebar - Elite Redesign */}
       <aside className="sidebar">
         <div className="sidebar-header">
           <div className="sidebar-logo">
             <svg className="logo-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
             </svg>
-            <span className="sidebar-brand">ACC Dashboard</span>
+            <span className="sidebar-brand">ACC ELITE</span>
           </div>
-          <span className="sidebar-version">v2.0 (Next.js)</span>
         </div>
 
         <nav className="sidebar-nav">
-          {[
-            { id: "dashboard", label: "Dashboard", icon: "Layout" },
-            { id: "agent", label: "Run Agent", icon: "Play" },
-            { id: "approvals", label: "Approvals", icon: "CheckSquare", badge: stats.waiting },
-            { id: "tokens", label: "Token Vault", icon: "Shield" },
-            { id: "logs", label: "Audit Logs", icon: "FileText" },
-          ].map(t => (
-            <button
-              key={t.id}
-              className={`nav-item ${currentTab === t.id ? "active" : ""}`}
-              onClick={() => setCurrentTab(t.id)}
-            >
-              <span className="flex items-center gap-3">
-                {t.label}
-                {t.badge > 0 && <span className="nav-badge">{t.badge}</span>}
-              </span>
-            </button>
-          ))}
+          <button className={`nav-item ${currentTab === 'dashboard' ? 'active' : ''}`} onClick={() => setCurrentTab('dashboard')}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+            Overview
+          </button>
+          <button className={`nav-item ${currentTab === 'agent' ? 'active' : ''}`} onClick={() => setCurrentTab('agent')}>
+             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+             Execute Agent
+          </button>
+          <button className={`nav-item ${currentTab === 'approvals' ? 'active' : ''}`} onClick={() => setCurrentTab('approvals')}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+            Approvals
+            {stats.waiting > 0 && <span className="nav-badge">{stats.waiting}</span>}
+          </button>
+          <button className={`nav-item ${currentTab === 'tokens' ? 'active' : ''}`} onClick={() => setCurrentTab('tokens')}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+            Token Vault
+          </button>
+          <button className={`nav-item ${currentTab === 'logs' ? 'active' : ''}`} onClick={() => setCurrentTab('logs')}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+            Audit Trail
+          </button>
         </nav>
 
         <div className="sidebar-footer">
@@ -238,86 +240,68 @@ export default function Dashboard() {
               <div className="user-email">{user?.email}</div>
             </div>
           </div>
-          <a href="/auth/logout" className="btn btn-ghost btn-sm btn-full mt-2">Log out</a>
+          <a href="/auth/logout" className="btn btn-ghost btn-full mt-4" style={{ textAlign: 'center', width: '100%', display: 'block', textDecoration: 'none' }}>Disconnect</a>
         </div>
       </aside>
 
-      {/* Main Content */}
+      {/* Main Content - Modern Hierarchy */}
       <main className="main-content">
-        {/* Dashboard Tab */}
         {currentTab === "dashboard" && (
           <div className="tab-panel active">
             <header className="page-header">
               <div>
-                <h1 className="page-title">Security Overview</h1>
-                <p className="page-subtitle">Monitoring authorized agent activities and vaults</p>
+                <h1 className="page-title">Security Center</h1>
+                <p className="page-subtitle">Zero-Trust Monitoring & Access Control</p>
               </div>
-              <button onClick={() => initData()} className="btn btn-ghost btn-sm">Refresh All</button>
+              <button onClick={() => initData()} className="btn btn-ghost">Refresh Status</button>
             </header>
 
             <div className="stats-grid">
               <div className="stat-card">
-                <div className="stat-icon green">✓</div>
-                <div>
-                  <div className="stat-value">{stats.completed}</div>
-                  <div className="stat-label">Tasks OK</div>
-                </div>
+                <div className="stat-value text-green" style={{ color: 'var(--success)' }}>{stats.completed}</div>
+                <div className="stat-label">Verified Tasks</div>
               </div>
               <div className="stat-card">
-                <div className="stat-icon red">✕</div>
-                <div>
-                  <div className="stat-value">{stats.denied}</div>
-                  <div className="stat-label">Tasks Denied</div>
-                </div>
+                <div className="stat-value text-red" style={{ color: 'var(--danger)' }}>{stats.denied}</div>
+                <div className="stat-label">Blocked Actions</div>
               </div>
               <div className="stat-card">
-                <div className="stat-icon amber">⏸</div>
-                <div>
-                  <div className="stat-value">{stats.waiting}</div>
-                  <div className="stat-label">Pending Approval</div>
-                </div>
+                <div className="stat-value text-amber" style={{ color: 'var(--warning)' }}>{stats.waiting}</div>
+                <div className="stat-label">Pending Approval</div>
               </div>
               <div className="stat-card">
-                <div className="stat-icon violet">🔒</div>
-                <div>
-                  <div className="stat-value">{connections.filter(c => !c.isRevoked).length}</div>
-                  <div className="stat-label">Active Vaults</div>
-                </div>
+                <div className="stat-value" style={{ color: 'var(--accent-neon)' }}>{connections.filter(c => !c.isRevoked).length}</div>
+                <div className="stat-label">Vault Connectors</div>
               </div>
             </div>
 
             <div className="two-col">
               <section className="section-card">
-                <div className="section-header">
-                  <h2 className="section-title">Live Audit Feed</h2>
-                </div>
+                <h2 className="section-title">Live Security Feed</h2>
                 <div className="activity-feed">
-                  {logs.slice(0, 10).map(log => (
+                  {logs.length > 0 ? logs.slice(0, 10).map(log => (
                     <div key={log.id} className="feed-item">
                       <div className={`feed-item-icon ${log.decision === 'allow' ? 'allow' : 'deny'}`}>
                         {log.decision === 'allow' ? '✓' : '✕'}
                       </div>
                       <div className="feed-item-body">
-                        <div className="feed-item-action">{log.action || 'Unknown'} <span className="badge badge-info">{log.decision}</span></div>
+                        <div className="feed-item-action">{log.action || 'Access'} <span className={`badge ${log.decision === 'allow' ? 'badge-allow' : 'badge-deny'}`}>{log.decision}</span></div>
                         <div className="feed-item-detail">
-                          {log.tokenFingerprint ? <code>{log.tokenFingerprint}</code> : 'None'} · {new Date(log.timestamp).toLocaleTimeString()}
+                          <span className="mono text-xs">{log.tokenFingerprint || 'Internal'}</span> · {new Date(log.timestamp).toLocaleTimeString()}
                         </div>
                       </div>
                     </div>
-                  ))}
+                  )) : <div className="feed-empty">No security events found.</div>}
                 </div>
               </section>
 
               <section className="section-card">
-                <div className="section-header">
-                  <h2 className="section-title">Permission Guard</h2>
-                </div>
+                <h2 className="section-title">Active Guardrails</h2>
                 <div className="permission-table">
-                  {rules.filter(r => r.action !== '*').map(r => (
-                    <div key={r.action} className="permission-row border-b border-white/5 py-2">
-                      <span className="mono">{r.action}</span>
-                      <span className="badge badge-allow">{r.decision}</span>
-                      <span className="text-muted text-xs">{r.riskLevel}</span>
+                   {rules.filter(r => r.action !== '*').map(r => (
+                    <div key={r.action} className="permission-row" style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0', borderBottom: '1px solid var(--border)' }}>
+                      <span className="mono" style={{ fontSize: '13px' }}>{r.action}</span>
+                      <span className={`badge ${r.decision === 'allow' ? 'badge-allow' : 'badge-deny'}`} style={{ color: r.decision === 'allow' ? 'var(--success)' : 'var(--warning)' }}>{r.decision}</span>
                     </div>
                   ))}
                 </div>
@@ -326,59 +310,56 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Run Agent Tab */}
         {currentTab === "agent" && (
           <div className="tab-panel active">
             <header className="page-header">
               <div>
-                <h1 className="page-title">Agent Control</h1>
-                <p className="page-subtitle">Assign a natural language task to the AI agent</p>
+                <h1 className="page-title">Agent Execution</h1>
+                <p className="page-subtitle">Execute tasks in the secretless vault environment</p>
               </div>
             </header>
 
             <div className="two-col">
               <div className="section-card">
-                <div className="form-group">
-                  <label className="form-label">Task Description</label>
-                  <textarea
-                    rows="4"
-                    className="form-textarea"
-                    placeholder="e.g. Summarize my last 5 emails regarding project X..."
-                    value={task}
-                    onChange={(e) => setTask(e.target.value)}
-                  />
-                </div>
-                <div className="quick-tasks mt-4">
+                <label className="sidebar-brand" style={{ fontSize: '12px', opacity: 0.6, marginBottom: '8px', display: 'block' }}>NATURAL LANGUAGE COMMAND</label>
+                <textarea
+                  rows="5"
+                  className="form-textarea"
+                  placeholder="e.g. List my recent emails and summarize the top one..."
+                  value={task}
+                  onChange={(e) => setTask(e.target.value)}
+                />
+                <div className="quick-tasks mt-4" style={{ display: 'flex', gap: '8px', marginTop: '16px' }}>
                   <button onClick={() => setTask("Summarize my last 5 emails")} className="quick-btn">Summarize Emails</button>
-                  <button onClick={() => setTask("Send email to test@example.com about the hackathon")} className="quick-btn">Send Email</button>
-                  <button onClick={() => setTask("Delete my draft emails")} className="quick-btn text-red">Delete Drafts</button>
+                  <button onClick={() => setTask("Send email to test@example.com about meeting")} className="quick-btn">Send Email</button>
                 </div>
                 <button
                   onClick={handleRun}
                   disabled={running}
-                  className="btn btn-primary btn-full mt-6"
+                  className="btn btn-primary mt-6"
+                  style={{ width: '100%', marginTop: '24px' }}
                 >
-                  {running ? "Processing..." : "Execute Agent Task"}
+                  {running ? "Vault Exchange in Progress..." : "Trigger Secretless Loop"}
                 </button>
               </div>
 
               <div className="section-card">
-                <h2 className="section-title mb-4">Live Execution Result</h2>
+                <h2 className="section-title">Execution Result</h2>
                 <div id="run-result">
                   {currentRun ? (
                     <div className="run-result-content">
-                      <div className="run-summary">{currentRun.result?.summary || currentRun.task}</div>
-                      <div className="action-list mt-2">
+                      <div className="run-summary" style={{ padding: '16px', background: 'rgba(255,255,255,0.05)', borderRadius: '12px' }}>{currentRun.result?.summary || currentRun.task}</div>
+                      <div className="action-list mt-4">
                         {currentRun.actions?.map(a => (
-                          <div key={a.id} className="action-item">
-                            <span>{a.name}</span>
-                            <span className={a.status === 'completed' ? 'text-green' : 'text-amber'}>{a.status}</span>
+                          <div key={a.id} className="action-item" style={{ padding: '12px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between' }}>
+                            <span className="mono">{a.name}</span>
+                            <span className={`badge ${a.status === 'completed' ? 'badge-allow' : 'badge-info'}`}>{a.status}</span>
                           </div>
                         ))}
                       </div>
                     </div>
                   ) : (
-                    <div className="feed-empty">No active run</div>
+                    <div className="feed-empty">Waiting for command...</div>
                   )}
                 </div>
               </div>
@@ -386,104 +367,76 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Approvals Tab */}
         {currentTab === "approvals" && (
-          <div className="tab-panel active">
-            <header className="page-header">
-              <div>
-                <h1 className="page-title">Approval Queue</h1>
-                <p className="page-subtitle">Human-in-the-loop authorization for sensitive actions</p>
-              </div>
-            </header>
-            <div id="pending-list">
-              {pending.length > 0 ? pending.map(p => (
-                <div key={p.id} className="approval-card">
-                  <div className="approval-card-header">
-                    <div>
-                      <div className="approval-action">{p.actionName}</div>
-                      <div className="approval-meta">Run ID: {p.runId.slice(0, 8)}...</div>
-                    </div>
-                  </div>
-                  <pre className="approval-params">{JSON.stringify(p.actionData, null, 2)}</pre>
-                  <div className="approval-controls gap-4 flex mt-4">
-                    <button onClick={() => handleApprove(p.id)} className="btn btn-success">Approve</button>
-                    <button onClick={() => handleDeny(p.id)} className="btn btn-danger">Deny</button>
-                  </div>
-                </div>
-              )) : (
-                <div className="section-card"><div className="feed-empty">No pending approvals</div></div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Token Vault Tab */}
-        {currentTab === "tokens" && (
-          <div className="tab-panel active">
+           <div className="tab-panel active">
              <header className="page-header">
-              <div>
-                <h1 className="page-title">Token Vault Management</h1>
-                <p className="page-subtitle">Manage external connections and revoke authorization</p>
-              </div>
-            </header>
-
-            <div className="section-card">
-              <h2 className="section-title mb-4">Connected Services</h2>
-              {connections.map(c => (
-                <div key={c.connection} className="connection-card mb-4">
-                  <div>
-                    <div className="connection-name">{c.connection}</div>
-                    <div className="connection-meta">Status: {c.isRevoked ? 'Revoked' : 'Active'}</div>
+               <div>
+                 <h1 className="page-title">Approval Queue</h1>
+                 <p className="page-subtitle">Human-in-the-loop verification for sensitive actions</p>
+               </div>
+             </header>
+             {pending.length > 0 ? pending.map(p => (
+                <div key={p.id} className="approval-card">
+                  <div className="approval-action">{p.actionName}</div>
+                  <pre className="approval-params">{JSON.stringify(p.actionData, null, 2)}</pre>
+                  <div className="approval-controls">
+                    <button onClick={() => handleApprove(p.id)} className="btn btn-primary" style={{ background: 'var(--success)' }}>Authorize</button>
+                    <button onClick={() => handleDeny(p.id)} className="btn btn-ghost" style={{ color: 'var(--danger)', borderColor: 'var(--danger)' }}>Block</button>
                   </div>
-                  {!c.isRevoked && (
-                    <button
-                      onClick={() => handleRevoke(c.connection)}
-                      className="btn btn-danger btn-sm"
-                      disabled={revoking}
-                    >
-                      {revoking ? "Revoking..." : "Revoke and Deauthorize"}
-                    </button>
-                  )}
                 </div>
-              ))}
-              {revokeResult && (
-                <div className="p-4 bg-black/40 border border-green/30 rounded-lg mt-4">
-                  <div className="text-green font-bold">✓ Revoked Successfully</div>
-                  <div className="text-xs text-muted mt-2">{revokeResult.securityNote}</div>
-                </div>
-              )}
-            </div>
-          </div>
+              )) : <div className="section-card"><div className="feed-empty">Approval queue is empty.</div></div>}
+           </div>
         )}
 
-        {/* Logs Tab */}
+        {currentTab === "tokens" && (
+           <div className="tab-panel active">
+             <header className="page-header">
+               <div>
+                 <h1 className="page-title">Token Vault</h1>
+                 <p className="page-subtitle">Manage external connections and RFC 8693 grants</p>
+               </div>
+             </header>
+             <div className="section-card">
+                {connections.map(c => (
+                  <div key={c.connection} className="connection-card" style={{ display: 'flex', justifyContent: 'space-between', padding: '24px', borderBottom: '1px solid var(--border)', background: 'rgba(255,255,255,0.02)', borderRadius: '16px', marginBottom: '16px' }}>
+                    <div>
+                      <div className="connection-name">{c.connection}</div>
+                      <div className="connection-meta">Vault Status: {c.isRevoked ? 'REVOKED' : 'SECURE'}</div>
+                    </div>
+                    {!c.isRevoked && (
+                      <button onClick={() => handleRevoke(c.connection)} className="btn btn-ghost" style={{ borderColor: 'var(--danger)', color: 'var(--danger)' }}>Revoke Vault Access</button>
+                    )}
+                  </div>
+                ))}
+             </div>
+           </div>
+        )}
+
         {currentTab === "logs" && (
           <div className="tab-panel active">
              <header className="page-header">
               <div>
                 <h1 className="page-title">Audit Trail</h1>
-                <p className="page-subtitle">Immutable record of all agent activities</p>
+                <p className="page-subtitle">Cryptographical record of vault sessions</p>
               </div>
             </header>
-            <div className="section-card overflow-x-auto">
-              <table className="w-full text-left">
-                <thead className="text-muted text-xs uppercase">
+            <div className="section-card" style={{ padding: 0, overflow: 'hidden' }}>
+              <table className="w-full text-left" style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead style={{ background: 'rgba(255,255,255,0.03)' }}>
                   <tr>
-                    <th className="pb-4">Timestamp</th>
-                    <th className="pb-4">Action</th>
-                    <th className="pb-4">Decision</th>
-                    <th className="pb-4">Token</th>
-                    <th className="pb-4">Status</th>
+                    <th style={{ padding: '16px' }}>Session / Token Fingerprint</th>
+                    <th style={{ padding: '16px' }}>Action</th>
+                    <th style={{ padding: '16px' }}>Status</th>
+                    <th style={{ padding: '16px' }}>Timestamp</th>
                   </tr>
                 </thead>
-                <tbody className="text-sm">
+                <tbody>
                   {logs.map(log => (
-                    <tr key={log.id} className="border-t border-white/5">
-                      <td className="py-3 text-muted">{new Date(log.timestamp).toLocaleString()}</td>
-                      <td className="py-3 font-mono">{log.action}</td>
-                      <td className="py-3"><span className={`badge ${log.decision === 'allow' ? 'badge-allow' : 'badge-deny'}`}>{log.decision}</span></td>
-                      <td className="py-3 font-mono text-xs">{log.tokenFingerprint}</td>
-                      <td className="py-3"><span className="badge badge-info">{log.status}</span></td>
+                    <tr key={log.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                      <td style={{ padding: '16px' }}><span className="mono text-xs">{log.tokenFingerprint || 'VAULT_INTERNAL'}</span></td>
+                      <td style={{ padding: '16px' }}>{log.action}</td>
+                      <td style={{ padding: '16px' }}><span className={`badge ${log.status === 'success' ? 'badge-allow' : 'badge-info'}`}>{log.status}</span></td>
+                      <td style={{ padding: '16px' }} className="text-muted text-xs">{new Date(log.timestamp).toLocaleString()}</td>
                     </tr>
                   ))}
                 </tbody>

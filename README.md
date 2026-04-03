@@ -24,56 +24,50 @@ Instead of giving an agent a key to your house, ACC acts as a **Temporal Vault**
 ```mermaid
 graph TD
     %% Personas
-    User([👤 The User])
-    Agent([🤖 AI Agent])
+    User([👤 User])
     
-    %% Core Components
-    subgraph "Agent Control Center (ACC Dashboard)"
-        Orchestrator[Agent Orchestrator]
-        PermEngine[Permission Engine]
-        Audit[Audit Logger]
-        DB[(Better-SQLite3 DB)]
+    %% Dashboard Layer
+    subgraph Dashboard ["Agent Control Center (ACC)"]
+        direction TB
+        Orchestrator["🧠 Agent Orchestrator"]
+        PermEngine["⚔️ Permission Engine"]
+        Audit["📜 Audit Logger"]
     end
     
-    %% Vault System
-    subgraph "Security Layer"
-        Vault[ACC Token Vault]
-        Auth0[Auth0 Token Vault]
+    %% Vault Layer
+    subgraph VaultLayer ["Identity & Token Vault"]
+        direction LR
+        Vault["🔒 ACC Vault"]
+        Auth0Vault["🛡️ Auth0 Vault (RFC 8693)"]
     end
     
-    %% External Systems
-    Connectors[System Connectors]
-    Gmail[Gmail / Slack / GCP]
+    %% Execution Layer
+    subgraph Execution ["Execution Environment"]
+        Connectors["🔌 System Connectors"]
+        Gmail["📧 Gmail / Workspace"]
+    end
 
-    %% Flow
-    User -->|Assigns Task| Orchestrator
-    Orchestrator -->|Decompose & Evaluate| PermEngine
-    PermEngine -->|Risk Decision| Orchestrator
+    %% User Interaction
+    User -->|1. Assign Task| Orchestrator
+    Orchestrator -- "2. Check Risk" --> PermEngine
+    PermEngine -- "Allow / HITL" --> Orchestrator
     
     %% The Secretless Loop
-    Orchestrator -->|Request Short-lived Token| Vault
-    Vault -->|RFC 8693 Exchange| Auth0
-    Auth0 -->|Task-Bound Scoped Token| Vault
-    Vault -->|Disposable Token| Orchestrator
+    Orchestrator -->|3. Exchange ID Token| Vault
+    Vault <-->|4. RFC 8693| Auth0Vault
+    Vault -->|5. Short-lived Access Token| Orchestrator
     
-    %% Execution
-    Orchestrator -->|Execute Action| Connectors
-    Connectors -->|API Call| Gmail
-    
-    %% Governance
-    Orchestrator -->|Log Everything| Audit
-    Audit -->|Write Trace| DB
-    DB -->|Visual Audit Feed| User
-    
-    %% Human in the loop
-    Orchestrator -- "Requires Approval" --> User
-    User -- "Approve / Deny" --> Orchestrator
+    %% Action & Trace
+    Orchestrator -->|6. Execute| Connectors
+    Connectors -->|7. API Call| Gmail
+    Orchestrator -->|8. Log Trace| Audit
+    Audit -->|9. Audit Record| User
 
     %% Styling
-    style User fill:#ebeeff,stroke:#5468ff,stroke-width:2px
-    style Auth0 fill:#fff3eb,stroke:#eb5424,stroke-width:2px
-    style Orchestrator fill:#f5faff,stroke:#0071e3,stroke-width:2px
-    style DB fill:#f5f5f7,stroke:#1d1d1f,stroke-width:1px
+    style User fill:#edf2ff,stroke:#4c6ef5,stroke-width:2px
+    style Auth0Vault fill:#fff4e6,stroke:#fd7e14,stroke-width:2px
+    style Orchestrator fill:#f8f9fa,stroke:#1d1d1f,stroke-width:2px
+    style Dashboard fill:#f1f3f5,stroke:#adb5bd,stroke-width:1px,stroke-dasharray: 5 5
 ```
 
 ## 🎭 The Security Personas
