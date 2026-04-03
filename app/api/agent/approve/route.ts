@@ -47,8 +47,12 @@ export async function POST(req: Request) {
       finalResult = await executeWithToken(userId, service, async (token: string) => {
         fingerprint = `...${token.slice(-4)}`;
         
-        // The user explicitly requested the email ONLY go to the email they logged in with.
-        const targetEmail = session.user?.email || "toxiccodez19@gmail.com";
+        // 1. Try to extract an email target from the prompt
+        const emailRegex = /([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/i;
+        const matchedEmail = task.match(emailRegex);
+        
+        // 2. Set target to the extracted email or fallback to session
+        const targetEmail = matchedEmail?.[0] || session.user?.email || "toxiccodez19@gmail.com";
         
         return await sendEmail(
           token, 
