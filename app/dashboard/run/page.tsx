@@ -673,7 +673,7 @@ export default function RunPage() {
                         Step-Up Auth Required — MFA Gate Active
                       </p>
                       <a
-                        href="/auth/login?screen_hint=mfa"
+                        href="/api/auth/login?screen_hint=mfa"
                         style={{
                           display: "block",
                           textAlign: "center",
