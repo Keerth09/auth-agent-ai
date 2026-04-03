@@ -1,98 +1,83 @@
-# 🛡️ Agent Control Center (ACC)
-### *Next-Generation Zero-Trust Orchestration for AI Agents*
-
-[![Auth0](https://img.shields.io/badge/Auth0-Verified-orange?style=flat-square&logo=auth0)](https://auth0.com)
-[![Next.js](https://img.shields.io/badge/Next.js-15+-black?style=flat-square&logo=next.js)](https://nextjs.org)
-[![Security](https://img.shields.io/badge/Security-RFC%208693-blue?style=flat-square)](https://datatracker.ietf.org/doc/html/rfc8693)
-[![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
-
-**Agent Control Center** is a production-grade security bridge for AI Agents. It decouples agent logic from user identity using **Auth0 Token Vault**, enabling agents to perform sensitive tasks (like summarizing Gmail) without ever seeing a single long-lived credential.
-
----
-
-## 🚀 Key Features
-
-*   **🔒 Token Vault Integration (RFC 8693)**: Uses OAuth 2.0 Token Exchange to convert user identities into short-lived, connection-specific access tokens.
-*   **🚦 Human-in-the-Loop (HITL)**: High-risk actions (e.g., deleting drafts, sending emails) require manual one-tap approval from the dashboard.
-*   **🛡️ Permission Engine**: A "Deny-by-Default" security layer that monitors every agent action against a granular policy.
-*   **📜 Immutable Audit Trail**: Every single API call, decision, and token exchange is logged with cryptographic fingerprints.
-*   **⚡ Next.js 15+ Core**: Built on the latest App Router architecture with serverless-ready route handlers.
-*   **🎨 Premium UI**: Apple-style dark mode dashboard with real-time activity feeds and security stats.
+<div align="center">
+  <img src="https://auth0.com/blog/images/auth0-logo-blue.png" width="100" />
+  <h1>🛡️ Agent Control Center (ACC)</h1>
+  <p><b><i>The Zero-Trust Intelligence Layer for Autonomous AI Agents</i></b></p>
+  <pre>
+  ┌─────────────────────────────────────────────────────┐
+  │  SECRETLESS  │  AUDITABLE  │  HUMAN-IN-THE-LOOP     │
+  └─────────────────────────────────────────────────────┘
+  </pre>
+  
+  [![Next.js 15](https://img.shields.io/badge/Next.js-15.0-black?style=for-the-badge&logo=next.js)](https://nextjs.org)
+  [![Auth0 V4](https://img.shields.io/badge/Auth0-V4%20SDK-EB5424?style=for-the-badge&logo=auth0)](https://auth0.com)
+  [![RFC 8693](https://img.shields.io/badge/Security-RFC%208693-blue?style=for-the-badge)](https://idp.rocks)
+</div>
 
 ---
 
-## 🏗️ Architecture
+## 🌌 The Vision
+Modern AI agents are often given **User Credentials** or long-lived **API Keys**. This is a security nightmare. **Agent Control Center (ACC)** completely reimagines agent identity. 
 
-```mermaid
-graph TD
-    User((User)) -->|Logs in| Dashboard[ACC Dashboard]
-    Dashboard -->|Task Request| Orchestrator[Agent Orchestrator]
-    Orchestrator -->|Request Token| Vault[Auth0 Token Vault]
-    Vault -->|RFC 8693 Exchange| Orchestrator
-    Orchestrator -->|Check Rules| Guard[Permission Engine]
-    Guard -->|High Risk| User
-    User -->|Approve| Guard
-    Guard -->|Allow| Service[Gmail / External API]
-    Service -->|Result| User
+Instead of giving an agent a key to your house, ACC acts as a **Temporal Vault**. It exchanges your identity for a one-time, task-bound token that expires the moment the agent finishes its work.
+
+## 🎭 The Security Personas
+- **👤 The User**: Maintains full ownership of their credentials.
+- **🤖 The Agent**: Operates in a "Secretless" environment, never seeing a refresh token.
+- **🔑 The Vault**: The Auth0-powered gatekeeper that performs the cryptographic exchange (RFC 8693).
+
+---
+
+## 🛠️ System Flow (The Secretless Loop)
+
+```text
+ [1] REQUEST  ➔ User assigns task: "Summarize my last 5 emails."
+ [2] EXCHANGE ➔ ACC sends User ID-Token to Auth0 Vault.
+ [3] RESOLVE  ➔ Vault returns a 60-minute scoped Google token.
+ [4] GUARD    ➔ Permission Engine checks: Does the agent have 'read' rights?
+ [5] HITL     ➔ If 'delete' or 'send' is requested, the Dashboard pauses.
+ [6] EXECUTE  ➔ Agent performs task and discards the token forever.
 ```
 
 ---
 
-## 🛠️ Tech Stack
+## 🏆 Why this project wins
 
-- **Frontend**: Next.js, React, Vanilla CSS (Premium Dark Theme)
-- **Security**: @auth0/nextjs-auth0 (V4 SDK), RFC 8693 Token Exchange
-- **Database**: SQLite (better-sqlite3) for persistent audit logs
-- **Language**: TypeScript (Strict Mode)
+### 1. Zero Persistence
+We store **Zero** user access tokens. If the ACC database is breached, the attacker finds nothing but empty audit logs. All high-entropy tokens stay within Auth0's hardened infrastructure.
+
+### 2. Temporal Identity
+We implement **RFC 8693 (Token Exchange)**. This is the industry standard for secure service-to-service impersonation, rarely seen in hackathon projects.
+
+### 3. Granular Governance
+The **Permission Engine** is deny-by-default. 
+- `read:email`? 🟢 Allowed.
+- `send:email`? 🟡 Requires human approval.
+- `delete:account`? 🔴 Permanently blocked.
 
 ---
 
-## 📦 Getting Started
+## ⚙️ Setup & Deployment
 
-### 1. Requirements
-- Node.js 22+
-- Auth0 Tenant with **Connected Accounts** enabled.
-
-### 2. Configure Environment
-Create a `.env.local` file:
-```bash
-# Auth0 App Config
-AUTH0_SECRET='use [openssl rand -hex 32]'
-AUTH0_BASE_URL='http://localhost:3000'
-AUTH0_DOMAIN='your-tenant.auth0.com'
+### Environment
+```ini
+AUTH0_SECRET='...' # Openssl generated
+AUTH0_DOMAIN='...' 
 AUTH0_CLIENT_ID='...'
-AUTH0_CLIENT_SECRET='...'
-
-# Token Vault
-AUTH0_CONNECTION_GOOGLE='google-oauth2'
+AUTH0_CLIENT_SECRET='...' # Vault-specific client secret
 ```
 
-### 3. Install and Run
+### Quickstart
 ```bash
 npm install
 npm run dev
 ```
-Navigate to `http://localhost:3000`.
 
 ---
 
-## 🛡️ Security Posture
+## 📝 Audit & Compliance
+ACC maintains a cryptographic audit log in **better-sqlite3**. Every action includes a **Token Fingerprint**, allowing you to trace exactly which Vault Exchange was used for which AI summary.
 
-### Secretless Execution
-The Agent logic runs in a "Secretless" environment. It never handles User Refresh Tokens. Instead, it requests a 1-hour scoped token from the Vault for the specific sub-task, minimizing the impact of any potential breach.
-
-### Granular Guardrails
-Unlike generic AI agents, ACC defines strict rules:
-- `gmail.list`: **Allow** (Low Risk)
-- `gmail.send`: **Approval Required** (High Risk)
-- `gmail.delete`: **Deny** (Critical Risk)
-
----
-
-## 🏆 Hackathon Goals
-- [x] Full Migration from Legacy Express to Next.js Modern Stack.
-- [x] Zero-Trust Token Exchange Implementation.
-- [x] Real-time Audit Trail & Approval Queue.
-- [x] Premium Minimal UX.
-
-Developed with ❤️ for the Auth0 AI Hackathon.
+<div align="center">
+  <br/>
+  <sub>Developed for the Auth0 AI Identity Hackathon 2026</sub>
+</div>
