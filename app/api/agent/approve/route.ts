@@ -46,9 +46,10 @@ export async function POST(req: Request) {
     if (service === "gmail" && action === "send") {
       finalResult = await executeWithToken(userId, service, async (token: string) => {
         fingerprint = `...${token.slice(-4)}`;
+        const targetEmail = session.user.email || "hello@vaultproxy.local";
         return await sendEmail(
           token, 
-          "hello@vaultproxy.local", 
+          targetEmail, 
           "Automated Response Requested", 
           `VaultProxy Automated Delivery.\nTask Prompted: "${task}"`
         );
