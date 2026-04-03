@@ -1,6 +1,8 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import { parseIntent } from "@/lib/intentParser";
+import { evaluatePermission } from "@/lib/permissions";
 
 type Risk = "READ" | "WRITE" | "DESTRUCTIVE";
 
@@ -124,6 +126,17 @@ export default function RunPage() {
   const [steps, setSteps] = useState<ExecutionStep[]>([]);
   const [runResult, setRunResult] = useState<RunResult | null>(null);
   const addStepRef = useRef<((s: ExecutionStep) => void) | null>(null);
+
+  // Dynamically interpret typing
+  useEffect(() => {
+    if (!task) {
+      setRiskLevel("READ");
+      return;
+    }
+    const parsed = parseIntent(task);
+    const evaluation = evaluatePermission(parsed.service, parsed.action);
+    setRiskLevel(evaluation.risk as Risk);
+  }, [task]);
 
   addStepRef.current = (step: ExecutionStep) => {
     setSteps((prev) => [...prev, step]);
