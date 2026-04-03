@@ -1,119 +1,115 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import React from "react";
 import Link from "next/link";
+import { ArrowUpRight, Shield, Activity, Zap } from "lucide-react";
 
 export default function NotFound() {
-  const [frame, setFrame] = useState(1);
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  // Play animation frames (1 to 67)
-  useEffect(() => {
-    // We pre-load the next few frames for smoother playback if possible
-    const interval = setInterval(() => {
-      setFrame((prev) => (prev >= 67 ? 1 : prev + 1));
-    }, 1000 / 24); // 24 FPS
-    return () => clearInterval(interval);
-  }, []);
-
-  // Update mouse position for 3D tilt effect
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!containerRef.current) return;
-    const { left, top, width, height } = containerRef.current.getBoundingClientRect();
-    const x = (e.clientX - left) / width - 0.5;
-    const y = (e.clientY - top) / height - 0.5;
-    setMousePos({ x, y });
-  };
-
-  const handleMouseLeave = () => {
-    setMousePos({ x: 0, y: 0 });
-  };
-
-  // Format frame string, e.g. "ezgif-frame-001.jpg"
-  const frameString = frame.toString().padStart(3, '0');
-  const imageUrl = `/404-frames/ezgif-frame-${frameString}.jpg`;
-
   return (
-    <div 
-      className="min-h-screen flex flex-col items-center justify-center bg-[#050505] text-white overflow-hidden relative"
-      style={{ perspective: "1200px" }}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-    >
-      {/* Grid Background */}
-      <div 
-        className="absolute inset-0 pointer-events-none opacity-[0.03] z-0" 
-        style={{ 
-          backgroundImage: "linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)", 
-          backgroundSize: "60px 60px",
-          transform: `translateY(${mousePos.y * -20}px) translateX(${mousePos.x * -20}px)` 
-        }}
-      />
-
-      {/* Dynamic Interactive 3D Scene */}
-      <div 
-        ref={containerRef}
-        className="relative w-[320px] h-[320px] md:w-[480px] md:h-[480px] transition-transform duration-100 ease-out z-10"
-        style={{
-          transform: `rotateY(${mousePos.x * 25}deg) rotateX(${mousePos.y * -25}deg)`,
-          transformStyle: "preserve-3d"
-        }}
-      >
-        {/* Layer 0: Depth Shadow / Glow */}
-        <div 
-          className="absolute inset-0 bg-blue-600/30 blur-[60px] rounded-full"
-          style={{ transform: "translateZ(-80px) scale(0.9)" }}
-        />
-        
-        {/* Layer 1: Frame Animation rendered on a 3D plane */}
-        <div 
-          className="absolute inset-0 rounded-3xl overflow-hidden border border-white/10 shadow-[0_0_50px_rgba(0,100,255,0.1)] bg-neutral-900"
-          style={{ transform: "translateZ(0px)", transformStyle: "preserve-3d" }}
-        >
-          {/* We use an img tag without next/image wrapper properly because it changes rapidly per frame */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img 
-            src={imageUrl} 
-            alt="404 Dimensional Error" 
-            className="w-full h-full object-cover opacity-90 select-none pointer-events-none"
-            style={{ mixBlendMode: "screen" }}
-          />
-          {/* Glossy Refraction Map overlay */}
-          <div className="absolute inset-0 bg-gradient-to-tr from-white/10 via-transparent to-black/40 mix-blend-overlay pointer-events-none" />
+    <div className="min-h-screen w-full bg-[#050505] flex items-center justify-center overflow-hidden relative">
+      {/* Background Glow */}
+      <div className="absolute bottom-0 left-0 w-full h-[30vh] bg-gradient-to-t from-red-900/10 to-transparent pointer-events-none" />
+      
+      {/* Large Decorative 4s */}
+      <div className="absolute inset-0 flex items-center justify-between px-10 md:px-20 select-none pointer-events-none">
+        {/* Left 4 */}
+        <div className="relative">
+          <span className="text-white font-syne font-black text-[25vw] leading-none opacity-100">4</span>
+          {/* Top-left arrow */}
+          <div className="absolute -top-[5%] -right-[15%] text-red-500 animate-pulse">
+             <svg width="80" height="80" viewBox="0 0 100 100" fill="currentColor">
+                <path d="M10 10 L40 10 L40 25 L25 25 L25 80 L10 80 Z" transform="rotate(135 50 50)" />
+             </svg>
+          </div>
         </div>
 
-        {/* Layer 2: Floating 3D Text Overlay on Top of the GIF Frame */}
-        <div 
-          className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none drop-shadow-[0_10px_20px_rgba(0,0,0,0.8)]"
-          style={{ transform: "translateZ(60px)" }}
-        >
-          <h1 className="text-8xl md:text-9xl font-black bg-clip-text text-transparent bg-gradient-to-b from-white to-gray-500 tracking-tighter">
-            404
-          </h1>
+        {/* Right 4 */}
+        <div className="relative">
+          <span className="text-white font-syne font-black text-[25vw] leading-none opacity-100">4</span>
+          {/* Bottom-right arrow */}
+          <div className="absolute -bottom-[5%] -left-[15%] text-red-500 animate-pulse">
+             <svg width="80" height="80" viewBox="0 0 100 100" fill="currentColor">
+                <path d="M10 10 L40 10 L40 25 L25 25 L25 80 L10 80 Z" transform="rotate(-45 50 50)" />
+             </svg>
+          </div>
         </div>
       </div>
 
-      {/* Bottom Interface */}
-      <div 
-        className="mt-16 text-center z-10 transition-transform duration-300 ease-out" 
-        style={{ transform: `translateY(${mousePos.y * -10}px)` }}
-      >
-        <h2 className="text-2xl font-medium text-white mb-3">
-          Entity Not Found
-        </h2>
-        <p className="text-gray-400 mb-8 max-w-sm mx-auto text-sm leading-relaxed">
-          The requested system node has decoupled from the primary vault. Authorization checks cannot proceed.
+      {/* Center Card */}
+      <div className="relative z-10 w-full max-w-[420px] bg-white rounded-[32px] p-10 text-center shadow-2xl mx-6">
+        <p className="text-gray-500 font-medium text-sm mb-2 tracking-widest uppercase">
+          ... 404 error ...
         </p>
-        
-        <Link 
-          href="/dashboard"
-          className="inline-flex items-center justify-center px-8 py-3 bg-white text-black font-semibold rounded-full hover:bg-gray-200 transition-all hover:scale-105 active:scale-95 shadow-[0_0_30px_rgba(255,255,255,0.15)] ring-1 ring-white/20"
-        >
-          Secure Egress →
-        </Link>
+        <h1 className="text-black font-syne font-bold text-4xl mb-6 leading-tight">
+          Sorry, page not <br/> found
+        </h1>
+        <p className="text-gray-400 text-sm mb-10 px-4">
+          Go to other sections to learn more about VaultProxy Security
+        </p>
+
+        <div className="flex flex-col gap-3">
+          {/* Links */}
+          <Link 
+            href="/dashboard"
+            className="group flex items-center justify-between p-5 bg-gray-50 rounded-2xl transition-all hover:bg-red-50"
+          >
+            <div className="flex items-center gap-4 text-left">
+              <div className="bg-red-100 p-2.5 rounded-xl text-red-500 group-hover:bg-red-500 group-hover:text-white transition-colors">
+                <Shield size={20} />
+              </div>
+              <div>
+                <h3 className="text-black font-bold text-sm">Control Center</h3>
+                <p className="text-gray-400 text-[11px]">System wide security oversight</p>
+              </div>
+            </div>
+            <ArrowUpRight size={20} className="text-gray-300 group-hover:text-red-500 transition-colors" />
+          </Link>
+
+          <Link 
+            href="/dashboard/run"
+            className="group flex items-center justify-between p-5 bg-gray-50 rounded-2xl transition-all hover:bg-red-50"
+          >
+            <div className="flex items-center gap-4 text-left">
+              <div className="bg-gray-200 p-2.5 rounded-xl text-gray-500 group-hover:bg-red-500 group-hover:text-white transition-colors">
+                <Zap size={20} />
+              </div>
+              <div>
+                <h3 className="text-black font-bold text-sm">Agent Terminal</h3>
+                <p className="text-gray-400 text-[11px]">Execute and monitor live agents</p>
+              </div>
+            </div>
+            <ArrowUpRight size={20} className="text-gray-300 group-hover:text-red-500 transition-colors" />
+          </Link>
+
+          <Link 
+            href="/dashboard/audit"
+            className="group flex items-center justify-between p-5 bg-gray-50 rounded-2xl transition-all hover:bg-red-50"
+          >
+            <div className="flex items-center gap-4 text-left">
+              <div className="bg-gray-200 p-2.5 rounded-xl text-gray-500 group-hover:bg-red-500 group-hover:text-white transition-colors">
+                <Activity size={20} />
+              </div>
+              <div>
+                <h3 className="text-black font-bold text-sm">Immutable Ledger</h3>
+                <p className="text-gray-400 text-[11px]">Review system wide audit logs</p>
+              </div>
+            </div>
+            <ArrowUpRight size={20} className="text-gray-300 group-hover:text-red-500 transition-colors" />
+          </Link>
+        </div>
+
+        <div className="mt-8">
+           <Link href="/" className="text-xs font-bold text-gray-300 hover:text-black transition-colors uppercase tracking-widest">
+             Return to safety
+           </Link>
+        </div>
       </div>
 
+      <style jsx>{`
+        .font-syne {
+          font-family: 'Syne', sans-serif;
+        }
+      `}</style>
     </div>
   );
 }
