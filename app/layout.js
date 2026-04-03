@@ -1,22 +1,10 @@
-import "./globals.css";
-
-export const metadata = {
-  title: "Agent Control Center — Auth0 Token Vault",
-  description: "Authorized AI Agents using Auth0 Token Vault",
-};
-
-export default function RootLayout({ children }) {
-  return (
-    <html lang="en">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
-      </head>
-      <body>
-        <div id="toast-container" />
-        {children}
-      </body>
-    </html>
-  );
-}
+/**
+ * DEPRECATED — this file is intentionally empty.
+ *
+ * The root layout is defined in app/layout.tsx (TypeScript).
+ * Next.js App Router prefers .tsx over .js; having both in the same
+ * directory would cause a duplicate route conflict.
+ *
+ * DO NOT add a default export here.
+ */
+export {};

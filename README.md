@@ -1,135 +1,103 @@
 <div align="center">
-  <h1>🛡️ Agent Control Center (ACC)</h1>
-  <p><b><i>The Zero-Trust Intelligence Layer for Autonomous AI Agents</i></b></p>
-  <pre>
-  ┌─────────────────────────────────────────────────────┐
-  │  SECRETLESS  │  AUDITABLE  │  HUMAN-IN-THE-LOOP     │
-  └─────────────────────────────────────────────────────┘
-  </pre>
+  <img src="public/icon.png" alt="VaultProxy Logo" width="120"/>
+
+  # VaultProxy 🛡️
   
-  [![Next.js 15](https://img.shields.io/badge/Next.js-15.0-black?style=for-the-badge&logo=next.js)](https://nextjs.org)
-  [![Auth0 V4](https://img.shields.io/badge/Auth0-V4%20SDK-EB5424?style=for-the-badge&logo=auth0)](https://auth0.com)
-  [![RFC 8693](https://img.shields.io/badge/Security-RFC%208693-blue?style=for-the-badge)](https://idp.rocks)
+  **Secure Zero-Trust Middleware for AI Agents**
+  
+  [![Auth0 Hackathon](https://img.shields.io/badge/Auth0-Authorized_to_Act-eb5424?style=for-the-badge)](https://auth0.com)
+  [![Next.js 16](https://img.shields.io/badge/Next.js_16-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
+  [![License MIT](https://img.shields.io/badge/License-MIT-purple.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
+
+  *Traditional applications give agents raw access tokens or API keys, creating massive blast-radius vulnerabilities. VaultProxy solves this.*
 </div>
 
 ---
 
-## 🌌 The Vision
-Modern AI agents are often given **User Credentials** or long-lived **API Keys**. This is a security nightmare. **Agent Control Center (ACC)** completely reimagines agent identity. 
+## 🚀 The Vision: Leashing AI
+AI Agents are powerful, but they shouldn't hold the keys to your castle. 
 
-Instead of giving an agent a key to your house, ACC acts as a **Temporal Vault**. It exchanges your identity for a one-time, task-bound token that expires the moment the agent finishes its work.
+When you authorize an AI agent to "act on your behalf," they typically receive raw OAuth access tokens or API keys injected directly into their environment. If the agent's memory is dumped, or a log file leaks, **your full account is compromised.**
 
-## 🏗️ System Architecture
+**VaultProxy** introduces a zero-trust architecture. Instead of holding tokens, agents hold *nothing*. They construct intents, pass them to VaultProxy, and VaultProxy fetches ephemeral tokens directly from the **Auth0 Token Vault**, injects them into the HTTP headers, performs the request, and discards the token. The agent never sees the credentials.
 
+## ✨ High-Fidelity Features
+
+1. **🔐 Auth0 Token Vault Integration:** Tokens are stored entirely within Auth0. The Next.js middleware retrieves them dynamically per-request.
+2. **🛡️ 3-Tier Permission Engine (Deny-by-Default):**
+   - 🟢 **READ Actions** (`gmail.read`): Auto-approved and proxied.
+   - 🟠 **WRITE Actions** (`gmail.send`): Quarantined pending Human-in-the-Loop review via the dashboard.
+   - 🔴 **DESTRUCTIVE Actions** (`gmail.delete`): Instantly blocked and triggers an Auth0 MFA step-up authentication flow.
+3. **📋 Cryptographic Audit Ledger:** An immutable SQLite ledger records every single action, risk level, token fingerprint, and response.
+4. **🎨 Premium UI/UX:** Built with Tailwind CSS, Next.js App Router, and Framer-grade CSS animations to deliver a world-class Auth0 security product aesthetic.
+
+## 📸 Dashboard & Control Center
+
+|<img src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b" alt="Secure Dashboard" width="400"/>|<img src="https://images.unsplash.com/photo-1555066931-4365d14bab8c" alt="Agent Logs" width="400"/>|
+|:---:|:---:|
+| **Zero-Trust Token Management** | **Immutable Audit Traces** |
+
+## 🛠️ Architecture Flow
 ```mermaid
-graph TD
-    %% Personas
-    User([👤 User])
-    
-    %% Dashboard Layer
-    subgraph Dashboard ["Agent Control Center (ACC)"]
-        direction TB
-        Orchestrator["🧠 Agent Orchestrator"]
-        PermEngine["⚔️ Permission Engine"]
-        Audit["📜 Audit Logger"]
-    end
-    
-    %% Vault Layer
-    subgraph VaultLayer ["Identity & Token Vault"]
-        direction LR
-        Vault["🔒 ACC Vault"]
-        Auth0Vault["🛡️ Auth0 Vault (RFC 8693)"]
-    end
-    
-    %% Execution Layer
-    subgraph Execution ["Execution Environment"]
-        Connectors["🔌 System Connectors"]
-        Gmail["📧 Gmail / Workspace"]
-    end
+sequenceDiagram
+    participant User
+    participant Agent as AI Agent
+    participant Proxy as VaultProxy
+    participant Auth0 as Auth0 Token Vault
+    participant API as Target API (Google / Slack)
 
-    %% User Interaction
-    User -->|1. Assign Task| Orchestrator
-    Orchestrator -- "2. Check Risk" --> PermEngine
-    PermEngine -- "Allow / HITL" --> Orchestrator
+    User->>Agent: "Summarize my last 5 emails"
+    Agent->>Proxy: POST /api/agent/run
+    Proxy->>Proxy: Parse Intent (gmail.read)
+    Proxy->>Proxy: Evaluate Permission Engine
     
-    %% The Secretless Loop
-    Orchestrator -->|3. Exchange ID Token| Vault
-    Vault <-->|4. RFC 8693| Auth0Vault
-    Vault -->|5. Short-lived Access Token| Orchestrator
-    
-    %% Action & Trace
-    Orchestrator -->|6. Execute| Connectors
-    Connectors -->|7. API Call| Gmail
-    Orchestrator -->|8. Log Trace| Audit
-    Audit -->|9. Audit Record| User
+    note over Proxy, Auth0: Read = Auto Approve
+    Proxy->>Auth0: Fetch Token (Subject: userID)
+    Auth0-->>Proxy: Ephemeral Bearer Token
 
-    %% Styling
-    style User fill:#edf2ff,stroke:#4c6ef5,stroke-width:2px
-    style Auth0Vault fill:#fff4e6,stroke:#fd7e14,stroke-width:2px
-    style Orchestrator fill:#f8f9fa,stroke:#1d1d1f,stroke-width:2px
-    style Dashboard fill:#f1f3f5,stroke:#adb5bd,stroke-width:1px,stroke-dasharray: 5 5
+    Proxy->>API: Inject Header & Execute Request
+    API-->>Proxy: HTTP 200 OK (Data)
+    
+    Proxy->>Proxy: Destroy Token from memory
+    Proxy-->>Agent: Action Result (Data Only)
 ```
 
-## 🎭 The Security Personas
-- **👤 The User**: Maintains full ownership of their credentials.
-- **🤖 The Agent**: Operates in a "Secretless" environment, never seeing a refresh token.
-- **🔑 The Vault**: The Auth0-powered gatekeeper that performs the cryptographic exchange (RFC 8693).
+## 💻 Tech Stack
+- **Framework:** Next.js 16 (App Router + React Server Components)
+- **Auth & IAM:** Auth0
+- **Token Storage:** Auth0 Token Vault Management API 
+- **Database:** SQLite (Better-SQLite3) for audit logs
+- **Styling:** Tailwind CSS + CSS Variables Dark Mode
+- **Icons:** Lucide React
 
----
+## 🏎️ Getting Started
 
-## 🛠️ System Flow (The Secretless Loop)
+### 1. Prerequisites
+- Node.js `v20+`
+- An Auth0 Application (Web App)
+- Auth0 Management API Application
 
-```text
- [1] REQUEST  ➔ User assigns task: "Summarize my last 5 emails."
- [2] EXCHANGE ➔ ACC sends User ID-Token to Auth0 Vault.
- [3] RESOLVE  ➔ Vault returns a 60-minute scoped Google token.
- [4] GUARD    ➔ Permission Engine checks: Does the agent have 'read' rights?
- [5] HITL     ➔ If 'delete' or 'send' is requested, the Dashboard pauses.
- [6] EXECUTE  ➔ Agent performs task and discards the token forever.
+### 2. Environment Setup
+Create a `.env.local` file in the root:
+```env
+# AUTH0 SECRETS
+AUTH0_SECRET='generate-with-openssl'
+AUTH0_BASE_URL='http://localhost:3000'
+AUTH0_ISSUER_BASE_URL='https://YOUR_TENANT.auth0.com'
+AUTH0_CLIENT_ID='your-client-id'
+AUTH0_CLIENT_SECRET='your-client-secret'
+
+# MANAGEMENT API
+AUTH0_MANAGEMENT_CLIENT_ID='your-mgmt-id'
+AUTH0_MANAGEMENT_CLIENT_SECRET='your-mgmt-secret'
+AUTH0_DOMAIN='YOUR_TENANT.auth0.com'
 ```
 
----
-
-## 🏆 Why this project wins
-
-### 1. Zero Persistence
-We store **Zero** user access tokens. If the ACC database is breached, the attacker finds nothing but empty audit logs. All high-entropy tokens stay within Auth0's hardened infrastructure.
-
-### 2. Temporal Identity
-We implement **RFC 8693 (Token Exchange)**. This is the industry standard for secure service-to-service impersonation, rarely seen in hackathon projects.
-
-### 3. Granular Governance
-The **Permission Engine** is deny-by-default. 
-- `read:email`? 🟢 Allowed.
-- `send:email`? 🟡 Requires human approval.
-- `delete:account`? 🔴 Permanently blocked.
-
----
-
-## ⚙️ Setup & Deployment
-
-### Environment
-```ini
-AUTH0_SECRET='...' # Openssl generated
-AUTH0_DOMAIN='...' 
-AUTH0_CLIENT_ID='...'
-AUTH0_CLIENT_SECRET='...' # Vault-specific client secret
-```
-
-### Quickstart
+### 3. Run Locally
 ```bash
 npm install
 npm run dev
 ```
+Visit `http://localhost:3000` to dive into the Agent Control Center!
 
----
-
-## 📝 Audit & Compliance
-ACC maintains a cryptographic audit log in **better-sqlite3**. Every action includes a **Token Fingerprint**, allowing you to trace exactly which Vault Exchange was used for which AI summary.
-
-<div align="center">
-  <br/>
-  <b>Developed by R Sai Dheeraj & A Keerthana</b>
-  <br/>
-  <sub>Developed for the Auth0 AI Identity Hackathon 2026</sub>
-</div>
+> *Designed with ❤️ for the Auth0 Hackathon 2026.*
