@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="public/icon.png" alt="VaultProxy Logo" width="120"/>
+  <img src="public/logo.png" alt="VaultProxy Logo" width="120"/>
 
   # VaultProxy 🛡️
   
@@ -33,7 +33,7 @@ When you authorize an AI agent to "act on your behalf," they typically receive r
 
 ## 📸 Dashboard & Control Center
 
-|<img src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b" alt="Secure Dashboard" width="400"/>|<img src="https://images.unsplash.com/photo-1555066931-4365d14bab8c" alt="Agent Logs" width="400"/>|
+|<img src="https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&q=80" alt="Secure Dashboard" width="400"/>|<img src="https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800&q=80" alt="Agent Logs" width="400"/>|
 |:---:|:---:|
 | **Zero-Trust Token Management** | **Immutable Audit Traces** |
 
