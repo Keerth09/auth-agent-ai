@@ -19,7 +19,18 @@ export function parseIntent(task: string): ParsedIntent {
   const lowerTask = task.toLowerCase();
 
   let service: ParsedIntent["service"] = "unknown";
-  if (lowerTask.includes("email") || lowerTask.includes("gmail") || lowerTask.includes("message")) {
+  
+  // Intelligent fuzzy matching for Gmail
+  const emailRegex = /([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/i;
+  
+  if (
+    lowerTask.includes("email") || 
+    lowerTask.includes("eamil") || 
+    lowerTask.includes("mail") || 
+    lowerTask.includes("gmail") || 
+    lowerTask.includes("message") ||
+    emailRegex.test(lowerTask)
+  ) {
     service = "gmail";
   } else if (lowerTask.includes("slack")) {
     service = "slack";

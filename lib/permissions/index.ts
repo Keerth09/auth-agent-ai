@@ -42,7 +42,7 @@ export function evaluatePermission(service: string, action: string): PermissionE
     case "slack.delete":
       return { risk: "DESTRUCTIVE", requiresApproval: true, requiresMFA: true };
     default:
-      console.log(`⚠️ Unrecognized permission key: ${key}. Defaulting to maximum restriction.`);
-      return { risk: "UNKNOWN", requiresApproval: true, requiresMFA: true };
+      console.log(`⚠️ Unrecognized permission key: ${key}. Defaulting to maximum restriction (DESTRUCTIVE).`);
+      return { risk: "DESTRUCTIVE", requiresApproval: true, requiresMFA: true };
   }
 }
