@@ -18,7 +18,7 @@ import {
   X,
   AlertTriangle,
   AlertCircle,
-  Github,
+  Code,
   BookOpen,
   Terminal,
   ScrollText,
@@ -278,7 +278,7 @@ export default function LandingPage() {
 
           <div className="flex items-center gap-6">
             <a href="#" className="flex items-center gap-1.5 text-sm font-medium transition-colors" style={{ color: 'var(--text-secondary)' }}>
-              <Github size={16} /> GitHub
+              <Code size={16} /> GitHub
             </a>
             <a href="#" className="flex items-center gap-1.5 text-sm font-medium transition-colors" style={{ color: 'var(--text-secondary)' }}>
               <BookOpen size={16} /> Docs
@@ -329,7 +329,7 @@ export default function LandingPage() {
             Launch Agent Control Center <ArrowRight size={18} />
           </a>
           <a href="#" className="flex items-center gap-2 px-8 py-3.5 rounded-xl font-semibold transition-all hover:-translate-y-1" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text-secondary)' }}>
-            <Github size={18} /> View on GitHub
+            <Code size={18} /> View on GitHub
           </a>
         </div>
 
@@ -821,7 +821,7 @@ export default function LandingPage() {
                <p className="text-xs mb-4" style={{ color: 'var(--text-muted)' }}>Built for Auth0 Authorized to Act Hackathon 2026</p>
                
                <div className="flex gap-4">
-                  <a href="#" className="transition-colors hover:text-[var(--purple)]" style={{ color: 'var(--text-muted)' }}><Github size={20} /></a>
+                  <a href="#" className="transition-colors hover:text-[var(--purple)]" style={{ color: 'var(--text-muted)' }}><Code size={20} /></a>
                   <a href="#" className="transition-colors hover:text-[var(--purple)]" style={{ color: 'var(--text-muted)' }}><Globe size={20} /></a>
                </div>
             </div>
