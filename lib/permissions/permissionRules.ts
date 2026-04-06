@@ -93,6 +93,13 @@ export const PERMISSION_RULES: PermissionRule[] = [
     reason: 'Deleting data is a destructive operation requiring human approval.',
     riskLevel: 'critical',
   },
+  {
+    id: 'rule:system:reset',
+    action: 'reset_system',
+    decision: 'require_step_up_auth',
+    reason: 'System reset requires admin authentication and confirmation',
+    riskLevel: 'critical',
+  },
   // ── Token Operations ──────────────────────────────────────────────────────
   {
     id: 'rule:token:revoke',

@@ -456,6 +456,7 @@ const ACTION_NAME_MAP: Record<string, ActionName> = {
   'delete_email': 'delete_email',
   'delete_data': 'delete_data',
   'delete_draft': 'delete_email',
+  'reset_system': 'reset_system',
 };
 
 function normalizeActionName(action: string): ActionName {

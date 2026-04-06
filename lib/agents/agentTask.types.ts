@@ -73,7 +73,7 @@ export type ActionStatus =
 /** Final result payload after agent completes */
 export interface AgentResult {
   summary: string;
-  data?: any[];
+  data?: unknown[];
   actionsCompleted: number;
   actionsFailed: number;
   actionsPending: number;

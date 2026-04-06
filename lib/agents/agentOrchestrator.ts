@@ -118,7 +118,7 @@ async function handleAIAction(
         
         console.log(`📤 [handleAIAction] Calling Gmail API -> sendEmail(to: ${to})`);
         result = await sendEmail(accessToken, to, subject, body);
-        console.log(`✅ [handleAIAction] Response: Email sent successfully, ID: ${(result as any)?.messageId || 'N/A'}`);
+        console.log(`✅ [handleAIAction] Response: Email sent successfully, ID: ${(result as { messageId?: string })?.messageId || 'N/A'}`);
         break;
       }
       case 'delete_email':

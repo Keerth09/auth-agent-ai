@@ -6,7 +6,7 @@ import Link from "next/link";
 import VaultProxyLogo from "@/components/VaultProxyLogo";
 import { 
   AlertTriangle, Lock, Shield, ClipboardList, LayoutDashboard, 
-  Bot, Zap, PauseCircle, FileText, Settings, Key, ShieldAlert
+  Zap, PauseCircle, Settings, ShieldAlert
 } from "lucide-react";
 
 interface User {
@@ -119,7 +119,6 @@ export default function DashboardLayout({
 
   const navItems: NavItem[] = [
     { id: "dashboard", label: "Dashboard",   icon: <LayoutDashboard size={20} />, href: "/dashboard" },
-    { id: "agents",    label: "Agent Fleet",  icon: <Bot size={20} />, href: "/dashboard/agents" },
     { id: "run",       label: "Run Agent",    icon: <Zap size={20} />, href: "/dashboard/run" },
     {
       id: "approvals",
@@ -129,17 +128,14 @@ export default function DashboardLayout({
       badge: pendingCount > 0 ? pendingCount : null,
       badgeColor: "bg-red-500",
     },
-    { id: "policies", label: "Zero-Trust Policies", icon: <FileText size={20} />, href: "/dashboard/policies" },
     { id: "audit",    label: "Audit Log",          icon: <ClipboardList size={20} />, href: "/dashboard/audit" },
     { id: "settings", label: "Settings",            icon: <Settings size={20} />, href: "/dashboard/settings" },
   ];
 
   const getActiveId = () => {
     if (pathname === "/dashboard") return "dashboard";
-    if (pathname.startsWith("/dashboard/agents"))   return "agents";
     if (pathname.startsWith("/dashboard/run"))       return "run";
     if (pathname.startsWith("/dashboard/approvals")) return "approvals";
-    if (pathname.startsWith("/dashboard/policies"))  return "policies";
     if (pathname.startsWith("/dashboard/audit"))     return "audit";
     if (pathname.startsWith("/dashboard/settings"))  return "settings";
     return "";

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { Lock, CheckCircle2, Shield, Smartphone, Search } from "lucide-react";
 
 export default function SettingsPage() {
   const [loading, setLoading] = useState(false);
@@ -12,7 +13,6 @@ export default function SettingsPage() {
     autoApproveRead: true,
     strictWrite: true,
   });
-  const [dangerzoneHover, setDangerzoneHover] = useState<string | null>(null);
 
   const toggle = (key: keyof typeof toggles) => {
     setToggles((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -71,20 +71,16 @@ export default function SettingsPage() {
             <div style={{ position: "absolute", top: -32, right: -32, width: 120, height: 120, background: "rgba(124,58,237,0.05)", borderRadius: "50%", filter: "blur(40px)" }} />
             <div style={{ display: "flex", alignItems: "center", gap: 24, position: "relative", zIndex: 1 }}>
               <div style={{ position: "relative", flexShrink: 0 }}>
-                <div style={{ width: 80, height: 80, borderRadius: 16, background: "linear-gradient(135deg, #7C3AED, #3b82f6)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, fontWeight: 700, color: "#fff", fontFamily: "var(--font-syne)", overflow: "hidden" }}>
-                  🔐
+                <div style={{ width: 80, height: 80, borderRadius: 16, background: "linear-gradient(135deg, #7C3AED, #3b82f6)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontFamily: "var(--font-syne)", overflow: "hidden" }}>
+                  <Lock size={32} />
                 </div>
-                <div style={{ position: "absolute", bottom: -4, right: -4, background: "#4cd7f6", padding: "3px 6px", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, border: "2px solid var(--bg-primary)" }}>
-                  ✅
+                <div style={{ position: "absolute", bottom: -4, right: -4, background: "#4cd7f6", padding: "3px", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", border: "2px solid var(--bg-primary)" }}>
+                  <CheckCircle2 size={12} color="#000" />
                 </div>
               </div>
               <div>
                 <h2 style={{ fontFamily: "var(--font-syne)", fontSize: 22, fontWeight: 700, color: "var(--text-primary)", marginBottom: 2 }}>System Administrator</h2>
                 <p style={{ fontSize: 10, fontFamily: "var(--font-mono)", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.2em", color: "#a78bfa", marginBottom: 14 }}>Senior Security Architect · Level 4 Clearance</p>
-                <div style={{ display: "flex", gap: 8 }}>
-                  <button style={{ padding: "8px 16px", borderRadius: 8, background: "rgba(255,255,255,0.05)", border: "1px solid var(--border)", fontSize: 11, fontWeight: 600, color: "var(--text-secondary)", cursor: "pointer" }}>Edit Profile</button>
-                  <button style={{ padding: "8px 16px", borderRadius: 8, background: "rgba(255,255,255,0.05)", border: "1px solid var(--border)", fontSize: 11, fontWeight: 600, color: "var(--text-secondary)", cursor: "pointer" }}>Update Avatar</button>
-                </div>
               </div>
             </div>
           </div>
@@ -92,7 +88,7 @@ export default function SettingsPage() {
           {/* Workspace Compliance */}
           <div style={{ padding: "24px 28px", background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: 16 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
-              <span style={{ fontSize: 20 }}>🛡️</span>
+              <Shield size={24} color="#a78bfa" />
               <h3 style={{ fontFamily: "var(--font-syne)", fontSize: 17, fontWeight: 700, color: "var(--text-primary)" }}>Workspace Compliance</h3>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -139,8 +135,8 @@ export default function SettingsPage() {
 
             {/* MFA header */}
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", marginBottom: 28 }}>
-              <div style={{ width: 64, height: 64, borderRadius: "50%", background: "rgba(124,58,237,0.15)", border: "1px solid rgba(124,58,237,0.35)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 26, marginBottom: 14, boxShadow: "0 0 24px rgba(124,58,237,0.3)" }}>
-                🔐
+              <div style={{ width: 64, height: 64, borderRadius: "50%", background: "rgba(124,58,237,0.15)", border: "1px solid rgba(124,58,237,0.35)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 14, boxShadow: "0 0 24px rgba(124,58,237,0.3)" }}>
+                <Lock size={28} color="#a78bfa" />
               </div>
               <h3 style={{ fontFamily: "var(--font-syne)", fontSize: 20, fontWeight: 700, color: "var(--text-primary)", marginBottom: 4 }}>MFA Protocols</h3>
               <p style={{ fontSize: 12, color: "var(--text-muted)" }}>
@@ -153,13 +149,13 @@ export default function SettingsPage() {
               <div style={{ padding: "18px", borderRadius: 14, background: "rgba(0,0,0,0.2)", border: "1px solid rgba(255,255,255,0.06)" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <span style={{ fontSize: 18 }}>📳</span>
+                    <Smartphone size={20} color="#a78bfa" />
                     <div>
                       <p style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)" }}>Authenticator App (TOTP)</p>
                       <p style={{ fontSize: 9, fontFamily: "var(--font-mono)", textTransform: "uppercase", letterSpacing: "0.15em", color: "#a78bfa", marginTop: 2 }}>Recommended</p>
                     </div>
                   </div>
-                  <span style={{ fontSize: 18, color: "#4cd7f6" }}>✅</span>
+                  <CheckCircle2 size={20} color="#4cd7f6" />
                 </div>
                 <button
                   onClick={handleMFA}
@@ -170,41 +166,13 @@ export default function SettingsPage() {
                 </button>
               </div>
 
-              {/* SMS Backup */}
-              <div style={{ padding: "18px", borderRadius: 14, background: "rgba(0,0,0,0.2)", border: "1px solid rgba(255,255,255,0.06)" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <span style={{ fontSize: 18, opacity: 0.5 }}>💬</span>
-                    <div>
-                      <p style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)" }}>SMS / Email Backup</p>
-                      <p style={{ fontSize: 9, fontFamily: "var(--font-mono)", textTransform: "uppercase", letterSpacing: "0.15em", color: "var(--text-muted)", marginTop: 2 }}>Secondary Fallback</p>
-                    </div>
-                  </div>
-                  <button style={{ background: "none", border: "none", fontSize: 11, fontWeight: 800, color: "#a78bfa", cursor: "pointer" }}>Setup</button>
-                </div>
-                <p style={{ fontSize: 10, fontStyle: "italic", color: "var(--text-muted)" }}>Required for emergency account recovery access.</p>
-              </div>
-
-              {/* Recovery Codes */}
-              <div style={{ padding: "18px", borderRadius: 14, background: "rgba(0,0,0,0.15)", border: "2px dashed rgba(255,255,255,0.08)" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-                  <span style={{ fontSize: 16, color: "#fbbf24" }}>🗝️</span>
-                  <p style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)" }}>Recovery Codes</p>
-                </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, marginBottom: 12 }}>
-                  {["****-****-****", "****-****-****"].map((c, i) => (
-                    <div key={i} style={{ padding: "8px", borderRadius: 8, background: "rgba(0,0,0,0.3)", fontFamily: "var(--font-mono)", fontSize: 10, textAlign: "center", color: "var(--text-muted)" }}>{c}</div>
-                  ))}
-                </div>
-                <button style={{ width: "100%", padding: "10px", borderRadius: 10, background: "rgba(251,191,36,0.08)", border: "1px solid rgba(251,191,36,0.2)", color: "#fbbf24", fontSize: 9, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.2em", cursor: "pointer" }}>
-                  Generate New Codes
-                </button>
-              </div>
             </div>
 
             {/* Login Activity Link */}
             <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-              <h4 style={{ fontSize: 9, fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.3em", color: "#4cd7f6", marginBottom: 10 }}>🔍 Login Activity</h4>
+              <h4 style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 9, fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.3em", color: "#4cd7f6", marginBottom: 10 }}>
+                <Search size={12} /> Login Activity
+              </h4>
               <Link href="/dashboard/settings/activity" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 14px", borderRadius: 12, background: "rgba(76,215,246,0.05)", border: "1px solid rgba(76,215,246,0.15)", textDecoration: "none", transition: "all 0.15s" }}>
                 <div>
                   <p style={{ fontSize: 12, fontWeight: 700, color: "var(--text-primary)" }}>View Login History</p>
@@ -214,33 +182,6 @@ export default function SettingsPage() {
               </Link>
             </div>
 
-            {/* Danger Zone */}
-            <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-              <h4 style={{ fontSize: 9, fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.3em", color: "#f87171", marginBottom: 12 }}>⚠ Danger Zone</h4>
-
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {[
-                  { label: "Freeze Vault Access", icon: "🧊" },
-                  { label: "Purge Workspace Identity", icon: "🗑️" },
-                ].map((btn) => (
-                  <button
-                    key={btn.label}
-                    onMouseEnter={() => setDangerzoneHover(btn.label)}
-                    onMouseLeave={() => setDangerzoneHover(null)}
-                    style={{
-                      width: "100%", textAlign: "left", padding: "14px 16px", borderRadius: 12,
-                      background: dangerzoneHover === btn.label ? "rgba(239,68,68,0.12)" : "rgba(239,68,68,0.06)",
-                      border: `1px solid rgba(239,68,68,${dangerzoneHover === btn.label ? 0.35 : 0.12})`,
-                      display: "flex", justifyContent: "space-between", alignItems: "center",
-                      cursor: "pointer", transition: "all 0.15s",
-                    }}
-                  >
-                    <span style={{ fontSize: 12, fontWeight: 700, color: "#f87171" }}>{btn.label}</span>
-                    <span style={{ fontSize: 16, opacity: dangerzoneHover === btn.label ? 1 : 0.5, transition: "opacity 0.15s" }}>{btn.icon}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
           </div>
 
           {/* Audit pulse widget */}

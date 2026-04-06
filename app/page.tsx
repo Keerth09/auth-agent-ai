@@ -7,16 +7,11 @@ import {
   Bell,
   User,
   History,
-  CheckCircle2,
   BarChart,
-  PenTool,
   Bot,
-  TerminalSquare,
   AlertTriangle,
   ArrowRight,
   Lock,
-  Zap,
-  Fingerprint,
   FileText,
   Activity,
   UserCheck
@@ -115,14 +110,14 @@ export default function LandingPage() {
               <div style={{ borderRadius: '8px', backgroundColor: '#050508', border: '1px solid rgba(255,255,255,0.05)', padding: '24px', fontFamily: 'monospace', fontSize: '14px', color: '#cbd5e1', textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                   <span style={{ color: '#a78bfa' }}>❯</span>
-                  <span style={{ color: '#94a3b8' }}>agent.run("Delete all drafts")</span>
+                  <span style={{ color: '#94a3b8' }}>agent.run(&quot;Delete all drafts&quot;)</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', opacity: 0.7 }}>
                   <span style={{ color: '#64748b' }}>·</span>
                   <span style={{ color: '#64748b' }}>Analyzing intent...</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '8px' }}>
-                  <span style={{ color: '#ef4444' }}>⚠</span>
+                  <AlertTriangle size={14} style={{ color: '#ef4444' }} />
                   <span style={{ color: '#f87171' }}>HIGH RISK: DESTRUCTIVE ACTION (gmail.delete)</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', backgroundColor: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', padding: '12px', borderRadius: '4px', marginTop: '8px' }}>
@@ -191,7 +186,7 @@ export default function LandingPage() {
                   </div>
                   
                   <div style={{ backgroundColor: '#050508', padding: '20px', borderRadius: '12px', fontFamily: 'monospace', fontSize: '12px', color: 'rgba(248, 113, 113, 0.9)', border: '1px solid rgba(239, 68, 68, 0.2)', lineHeight: 1.6, display: 'flex', flexDirection: 'column' }}>
-                    <span><span style={{ color: '#64748b' }}>&gt; Agent attempted to:</span> <span style={{ color: '#fff' }}>"DELETE FROM users WHERE admin = true"</span></span>
+                    <span><span style={{ color: '#64748b' }}>&gt; Agent attempted to:</span> <span style={{ color: '#fff' }}>&quot;DELETE FROM users WHERE admin = true&quot;</span></span>
                     <span style={{ marginTop: '16px' }}><span style={{ color: '#64748b' }}>&gt; Analysis:</span> Malicious Intent Detected</span>
                     <span style={{ marginTop: '8px' }}><span style={{ color: '#64748b' }}>&gt; Action:</span> <span style={{ fontWeight: 'bold', backgroundColor: 'rgba(239, 68, 68, 0.2)', padding: '4px 8px', borderRadius: '4px', color: '#fca5a5' }}>REQUEST QUARANTINED</span></span>
                   </div>
@@ -259,8 +254,8 @@ export default function LandingPage() {
                 <Link href="/auth/login" style={{ padding: '20px 40px', backgroundColor: '#fff', color: '#000', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', borderRadius: '12px', textTransform: 'uppercase', letterSpacing: '2px', fontSize: '14px', textDecoration: 'none' }}>
                   Launch Console <ArrowRight size={16} />
                 </Link>
-                <Link href="/dashboard/policies" style={{ padding: '20px 40px', backgroundColor: '#0a0a0f', color: '#fff', fontWeight: 'bold', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.2)', textTransform: 'uppercase', letterSpacing: '2px', fontSize: '14px', textDecoration: 'none' }}>
-                  View Demo Rules
+                <Link href="/dashboard/audit" style={{ padding: '20px 40px', backgroundColor: '#0a0a0f', color: '#fff', fontWeight: 'bold', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.2)', textTransform: 'uppercase', letterSpacing: '2px', fontSize: '14px', textDecoration: 'none' }}>
+                  View Audit Logs
                 </Link>
               </div>
             </div>

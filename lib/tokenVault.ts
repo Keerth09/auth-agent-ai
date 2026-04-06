@@ -107,7 +107,8 @@ export async function revokeConnection(userId: string, connection: string) {
 /**
  * listActiveConnections
  */
-export async function listActiveConnections(_userId?: string) {
+export async function listActiveConnections(userId?: string) {
+  void userId;
   return Object.keys(connectionMap).map((serviceName) => ({
     connection: connectionMap[serviceName],
     isRevoked: false,
