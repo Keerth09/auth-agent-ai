@@ -181,6 +181,27 @@ export async function sendEmail(
 }
 
 /**
+ * Trash an email message (doesn't permanently delete, safer).
+ * 
+ * @param accessToken - Gmail modify-scoped token
+ */
+export async function deleteEmail(
+  accessToken: string,
+  messageId: string
+): Promise<boolean> {
+  try {
+     await axios.post(`${GMAIL_API_BASE}/messages/${messageId}/trash`, null, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    return true;
+  } catch (err: unknown) {
+    // If not found, it's effectively deleted/trashed already
+    if (axios.isAxiosError(err) && err.response?.status === 404) return true;
+    handleGmailError(err, 'delete_email');
+  }
+}
+
+/**
  * Unified error handler for Gmail API errors.
  * Maps Gmail-specific errors to our error hierarchy.
  */

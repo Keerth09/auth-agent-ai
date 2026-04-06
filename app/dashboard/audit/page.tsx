@@ -202,10 +202,11 @@ export default function AuditPage() {
             </thead>
             <tbody>
               {filtered.map((log, i) => {
-                const dec = DECISION_COLORS[log.decision] ?? {
+                const decision = log.decision || "info";
+                const dec = DECISION_COLORS[decision] ?? {
                   bg: "rgba(255,255,255,0.05)",
                   text: "var(--text-secondary)",
-                  label: log.decision.toUpperCase(),
+                  label: decision.toUpperCase(),
                 };
                 return (
                   <tr

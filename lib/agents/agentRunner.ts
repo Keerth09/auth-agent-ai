@@ -22,6 +22,16 @@ export function createAgentRun(userId: string, task: string): AgentTask {
   const id = uuidv4();
   const now = new Date().toISOString();
 
+  // JIT Column Fix: Explicitly ensure 'user_id' exists in the active connection's table schema
+  try {
+    const tableInfo = db.prepare("PRAGMA table_info(agent_runs)").all() as Array<{ name: string }>;
+    if (tableInfo.length > 0 && !tableInfo.some(c => c.name === 'user_id')) {
+       db.exec("ALTER TABLE agent_runs RENAME COLUMN userId TO user_id;");
+    }
+  } catch {
+    // block errors for resilience — creation script in database.ts will handle it then
+  }
+
   db.prepare(`
     INSERT INTO agent_runs (id, user_id, task, status, actions, created_at, updated_at)
     VALUES (?, ?, ?, 'pending', '[]', ?, ?)

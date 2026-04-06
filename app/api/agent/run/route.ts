@@ -1,25 +1,9 @@
-/**
- * VaultProxy Agent Execution Endpoint
- * Complete Next.js server route connecting intent parsing, permission checks, logging,
- * and authenticated zero-trust token retrieval.
- */
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { auth0 } from "@/lib/auth0";
 
-import { parseIntent } from "@/lib/intentParser";
-import { evaluatePermission } from "@/lib/permissions";
-import { logAgentRun, updateAgentRun, createPendingAction } from "@/lib/database";
-import { executeWithToken } from "@/lib/tokenVault";
-import { summarizeEmails } from "@/lib/tools/gmail";
-
-function getStepUpAuthUrl() {
-  const domain = process.env.AUTH0_ISSUER_BASE_URL || "https://example.auth0.com";
-  const clientId = process.env.AUTH0_CLIENT_ID;
-  const baseUrl = process.env.AUTH0_BASE_URL || "http://localhost:3000";
-  
-  return `${domain}/authorize?response_type=code&client_id=${clientId}&redirect_uri=${baseUrl}/auth/callback&scope=openid%20profile%20email&acr_values=http://schemas.openid.net/pape/policies/2007/06/multi-factor`;
-}
+import { runAgent } from "@/lib/agents/agentOrchestrator";
+import { StepUpAuthRequired } from "@/lib/errors";
 
 const RunTaskSchema = z.object({
   task: z.string().min(1).max(500),
@@ -27,142 +11,99 @@ const RunTaskSchema = z.object({
 
 /**
  * POST endpoint enforcing 10-layer protocol for all incoming user agent instructions.
+ * Unified via the Agent Orchestrator.
  */
 export async function POST(req: Request) {
-  const startTime = Date.now();
-
   try {
-    // LAYER 2: Ensure valid session enforcement barrier
     const session = await auth0.getSession();
-    
     if (!session || !session.user) {
-      console.log(`⚠️ Blocked unauthorized API route call`);
       return NextResponse.json(
-        { error: "UNAUTHORIZED", message: "A valid session is required.", retryable: false },
+        { error: "UNAUTHORIZED", message: "A valid session is required." },
         { status: 401 }
       );
     }
-    const userId = session.user.sub;
 
-    // LAYER 5: Input structural validation
-    const bodyText = await req.text();
-    let body;
-    try {
-      body = JSON.parse(bodyText);
-    } catch {
-      return NextResponse.json(
-        { error: "BAD_REQUEST", message: "Invalid JSON body format.", retryable: false },
-        { status: 400 }
-      );
-    }
-
+    const body = await req.json();
     const parseResult = RunTaskSchema.safeParse(body);
     if (!parseResult.success) {
       return NextResponse.json(
-        { error: "VALIDATION_ERROR", message: "Task must be a string up to 500 characters", retryable: false },
+        { error: "VALIDATION_ERROR", message: "Invalid task input." },
         { status: 400 }
       );
     }
+
     const { task } = parseResult.data;
+    const userId = session.user.sub as string;
 
-    // LAYER 6: Intent Parsing & Permission Engine
-    const { service, action } = parseIntent(task);
-    const { risk, requiresApproval, requiresMFA } = evaluatePermission(service, action);
+    // Execute via Orchestrator
+    const run = await runAgent(task, userId);
 
-    // LAYER 9: Initial immutable context logging
-    const logId = logAgentRun({
-      userId,
-      task,
-      service,
-      action,
-      risk: risk as string,
-      status: "evaluating_permissions",
-      mfaTriggered: requiresMFA,
-      approvalRequired: requiresApproval,
-    });
-
-    // --- DESTRUCTIVE FLOW ---
-    if (requiresMFA) {
-      updateAgentRun(logId, { status: "step_up_required", durationMs: Date.now() - startTime });
-      return NextResponse.json({
-        status: "step_up_required",
-        authUrl: getStepUpAuthUrl(),
-        message: "This action is destructive and requires multi-factor authentication."
-      });
+    // Map result for frontend
+    let resultText = run.result?.summary || run.status;
+    
+    // Concatenate actual data (e.g. email contents) into the result text
+    const resultData = run.result?.data;
+    if (resultData && resultData.length > 0) {
+      const dataResults = resultData.map((d: { action: string; result: any }) => {
+        if (Array.isArray(d.result)) {
+           return d.result.map((item: any) => 
+             `[${d.action}] ${item.from || "System"}: ${item.subject || "No Subject"}\n   ${item.snippet || ""}`
+           ).join("\n\n");
+        }
+        return `[${d.action}] ${JSON.stringify(d.result)}`;
+      }).join("\n\n---\n\n");
+      
+      resultText = `${resultText}\n\n${dataResults}`;
     }
 
-    // --- WRITE FLOW ---
-    if (requiresApproval) {
-      updateAgentRun(logId, { status: "pending_approval", durationMs: Date.now() - startTime });
-      createPendingAction({
-        run_id: logId,
-        user_id: userId,
-        action_name: `${service.toUpperCase()}: ${action.toUpperCase()}`,
-        action_data: JSON.stringify({ task, service, action })
-      });
-      return NextResponse.json({
-        status: "pending_approval",
-        actionId: logId,
-        message: "Waiting for your approval. Please navigate to the Approvals dashboard."
-      });
+    const response: {
+      status: string;
+      result: string;
+      actionId: string;
+      fingerprint?: string;
+      message?: string;
+    } = {
+      status: run.status,
+      result: resultText,
+      actionId: run.id,
+      fingerprint: run.tokenFingerprint,
+    };
+
+    // If waiting for approval, highlight it
+    if (run.status === "waiting_approval") {
+      response.message = "This action requires human approval.";
     }
 
-    // --- READ / SAFE FLOW ---
-    updateAgentRun(logId, { status: "executing" });
-
-    let finalResult = "Unknown service or action request detected.";
-    let tokenFingerprint = "none";
-
-    try {
-      // Execute the task via Auth0 Token Vault execution abstraction
-      if (service === "gmail" && action === "read") {
-        finalResult = await executeWithToken(userId, service, async (token) => {
-          // Identify scope reference string snippet
-          tokenFingerprint = `...${token.slice(-4)}`;
-          return await summarizeEmails(token, task);
-        });
-      } else {
-        throw new Error(`Execution environment tool for ${service}.${action} is currently undefined.`);
-      }
-
-      updateAgentRun(logId, {
-        status: "completed",
-        result: finalResult,
-        tokenFingerprint,
-        durationMs: Date.now() - startTime
-      });
-      
-      console.log(`✅ Request fully processed seamlessly: [Log ID: ${logId}]`);
-
-      return NextResponse.json({
-        status: "completed",
-        result: finalResult,
-        fingerprint: tokenFingerprint,
-        durationMs: Date.now() - startTime
-      });
-
-    } catch (e: unknown) {
-      if (e && typeof e === 'object' && 'name' in e && (e as { name: string }).name === 'FederatedConnectionAccessTokenError') {
-         updateAgentRun(logId, { status: "denied", durationMs: Date.now() - startTime, result: "Access denied — connection revoked" });
-         return NextResponse.json(
-           { error: "ACCESS_DENIED", message: "Access denied — connection revoked.", retryable: false },
-           { status: 403 }
-         );
-      }
-      
-      const errorMsg = e instanceof Error ? e.message : "Internal Tool Execution Error during secure wrapper attempt.";
-      updateAgentRun(logId, { status: "failed", durationMs: Date.now() - startTime, result: errorMsg });
-      
-      return NextResponse.json(
-        { error: "EXECUTION_FAILED", message: errorMsg, retryable: true },
-        { status: 500 }
-      );
+    // If step-up required, extract the URL from the actions
+    if (run.status === "step_up_required") {
+       const stepUpAction = run.actions.find(a => a.status === 'requires_step_up');
+       if (stepUpAction && stepUpAction.params?._stepUpUrl) {
+         return NextResponse.json({
+           status: "step_up_required",
+           authUrl: stepUpAction.params._stepUpUrl as string,
+           message: "Step-up authentication is required for this destructive action.",
+           actionId: run.id
+         });
+       }
     }
+
+    return NextResponse.json(response);
 
   } catch (error: unknown) {
-    console.error(`❌ Fatal unified execution endpoint error:`, error);
+    console.error(`❌ Agent Route Error:`, error);
+    
+    // Handle specific security flow errors
+    if (error instanceof StepUpAuthRequired) {
+       return NextResponse.json({
+         status: "step_up_required",
+         authUrl: error.stepUpUrl,
+         message: error.message
+       });
+    }
+
+    const errorMessage = error instanceof Error ? error.message : "Failed to execute agent task.";
     return NextResponse.json(
-      { error: "INTERNAL_SERVER_ERROR", message: "An unexpected system-level error occurred.", retryable: true },
+      { error: "INTERNAL_ERROR", message: errorMessage },
       { status: 500 }
     );
   }

@@ -10,7 +10,7 @@ export default function SettingsPage() {
     setLoading(true);
     // In a real Auth0 app, we redirect to MFA enrollment
     setTimeout(() => {
-      window.location.href = "/auth/login?screen_hint=mfa";
+      window.location.href = "/dashboard/settings/password";
     }, 800);
   }
 

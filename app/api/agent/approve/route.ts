@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth0 } from "@/lib/auth0";
-import { getPendingActionById, resolvePendingAction, writeAuditLog } from "@/lib/database";
-import { executeWithToken } from "@/lib/tokenVault";
-import { sendEmail } from "@/lib/tools/gmail";
+import { executeApprovedAction } from "@/lib/agents/agentOrchestrator";
 
 export async function POST(req: Request) {
   try {
@@ -19,64 +17,19 @@ export async function POST(req: Request) {
 
     const userId = session.user.sub as string;
 
-    const pendingAction = getPendingActionById(actionId, userId);
-    if (!pendingAction) {
-      return NextResponse.json({ error: "Pending action not found or already resolved" }, { status: 404 });
+    // Execute the approved action via Orchestrator
+    const { result, action } = await executeApprovedAction(actionId, userId);
+
+    if (!action) {
+      return NextResponse.json({ error: "Action execution failed" }, { status: 500 });
     }
 
-    // Parse action data to know what to execute
-    let task = "";
-    let service = "";
-    let action = "";
-    
-    if (pendingAction.action_data) {
-      try {
-        const parsed = JSON.parse(pendingAction.action_data);
-        task = parsed.task || "";
-        service = parsed.service || "";
-        action = parsed.action || "";
-      } catch (e) {
-        console.error("Failed to parse action_data", e);
-      }
-    }
-
-    let fingerprint = "none";
-    let finalResult = "Action executed successfully (human-approved)";
-
-    if (service === "gmail" && action === "send") {
-      finalResult = await executeWithToken(userId, service, async (token: string) => {
-        fingerprint = `...${token.slice(-4)}`;
-        
-        // 1. Try to extract an email target from the prompt
-        const emailRegex = /([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/i;
-        const matchedEmail = task.match(emailRegex);
-        
-        // 2. Set target to the extracted email or fallback to session
-        const targetEmail = matchedEmail?.[0] || session.user?.email || "toxiccodez19@gmail.com";
-        
-        return await sendEmail(
-          token, 
-          targetEmail, 
-          "Automated Response Requested", 
-          `VaultProxy Automated Delivery.\nTask Prompted: "${task}"`
-        );
-      });
-    }
-
-    // Mark as approved AFTER execution succeeds
-    resolvePendingAction(actionId, "approved");
-
-    // Write audit log
-    writeAuditLog({
-      user_id: userId,
-      action: `${pendingAction.action_name} (human-approved)`,
-      token_fingerprint: fingerprint,
-      decision: "allow",
-      status: "success",
-      metadata: JSON.stringify({ approvedActionId: actionId, humanApproved: true, result: finalResult }),
+    return NextResponse.json({ 
+      message: "Action approved and executed successfully", 
+      result,
+      actionName: action.actionName
     });
-
-    return NextResponse.json({ message: "Action approved and executing", result: finalResult, fingerprint });
+    
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
     console.error("[agent/approve] Error:", message);

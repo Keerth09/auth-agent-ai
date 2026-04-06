@@ -30,10 +30,11 @@ import {
   resolvePendingAction,
   listPendingActions,
 } from '@/lib/agents/agentRunner';
-import { readEmails, listEmailSummaries, sendEmail } from '@/lib/connectors/gmailConnector';
+import { readEmails, listEmailSummaries, sendEmail, deleteEmail } from '@/lib/connectors/gmailConnector';
 import {
   AgentTask,
   AgentAction,
+  AgentRunStatus,
   ActionName,
   TaskDecomposition,
 } from '@/lib/agents/agentTask.types';
@@ -119,11 +120,10 @@ function decomposeTask(task: string): TaskDecomposition {
 async function executeAction(
   action: AgentAction,
   userId: string,
-  connection: string,
-  idToken: string
+  connection: string
 ): Promise<unknown> {
   // Fetch fresh token from Token Vault for each action
-  const accessToken = await getTokenForConnection(userId, connection, idToken);
+  const accessToken = await getTokenForConnection(userId, connection);
   const tokenFingerprint = maskToken(accessToken);
 
   try {
@@ -143,6 +143,18 @@ async function executeAction(
           body: string;
         };
         result = await sendEmail(accessToken, to, subject, body);
+        break;
+      }
+      case 'delete_email': {
+        // Extraction for destructive delete (requires target ID or search)
+        // For the hackathon demo, we take the last received message or search for keywords
+        const maxResults = 1;
+        const messages = await readEmails(accessToken, maxResults);
+        if (messages.length > 0) {
+          result = await deleteEmail(accessToken, messages[0].id);
+        } else {
+          result = { status: 'no_messages_found' };
+        }
         break;
       }
       default:
@@ -205,12 +217,8 @@ function getScopesForAction(action: string): string {
  */
 export async function runAgent(
   task: string,
-  userId: string,
-  idToken: string
+  userId: string
 ): Promise<AgentTask> {
-  if (!idToken) {
-    throw new AgentError('No ID token in session. Re-authenticate to use agent.');
-  }
 
   // 1. Create run record
   const run = createAgentRun(userId, task);
@@ -273,7 +281,7 @@ export async function runAgent(
         updateAgentActions(run.id, actions);
 
         try {
-          action.result = await executeAction(action, userId, decomposition.connection, idToken);
+          action.result = await executeAction(action, userId, decomposition.connection);
           action.status = 'completed';
           completedCount++;
         } catch (err: unknown) {
@@ -308,6 +316,7 @@ export async function runAgent(
         // ── REQUIRE_STEP_UP_AUTH: Block with re-auth URL ────────────────────
         action.status = 'requires_step_up';
         action.error = permResult.reason;
+        action.params = { ...action.params, _stepUpUrl: permResult.stepUpUrl };
 
         await auditLog({
           id: uuidv4(),
@@ -336,13 +345,18 @@ export async function runAgent(
     }
 
     // 5. Determine final status
-    const finalStatus = hasWaiting
+    let finalStatus: AgentRunStatus = hasWaiting
       ? 'waiting_approval'
       : hasFailed && completedCount === 0
       ? 'failed'
       : hasFailed
       ? 'partially_completed'
       : 'completed';
+
+    // If any action required step-up, that's the primary status
+    if (actions.some(a => a.status === 'requires_step_up')) {
+       finalStatus = 'step_up_required';
+    }
 
     const result = {
       summary:
@@ -397,10 +411,8 @@ export async function runAgent(
  */
 export async function executeApprovedAction(
   actionId: string,
-  userId: string,
-  idToken: string
+  userId: string
 ): Promise<{ result: unknown; action: ReturnType<typeof getPendingAction> }> {
-  if (!idToken) throw new AgentError('No ID token in session.');
 
   const pending = getPendingAction(actionId);
   if (!pending) throw new NotFoundError(`Pending action ${actionId}`);
@@ -420,7 +432,7 @@ export async function executeApprovedAction(
   resolvePendingAction(actionId, 'approved');
 
   const connection = process.env.AUTH0_CONNECTION_GOOGLE || 'google-oauth2';
-  const accessToken = await getTokenForConnection(userId, connection, idToken);
+  const accessToken = await getTokenForConnection(userId, connection);
   const tokenFingerprint = maskToken(accessToken);
 
   // Execute the action
@@ -434,7 +446,7 @@ export async function executeApprovedAction(
   };
 
   try {
-    const result = await executeAction(agentAction, userId, connection, idToken);
+    const result = await executeAction(agentAction, userId, connection);
 
     await auditLog({
       id: uuidv4(),

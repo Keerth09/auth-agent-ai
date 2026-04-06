@@ -17,6 +17,7 @@ export interface AgentTask {
   actions: AgentAction[];
   result?: AgentResult;
   error?: string;
+  tokenFingerprint?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -55,7 +56,8 @@ export type AgentRunStatus =
   | 'waiting_approval'
   | 'completed'
   | 'failed'
-  | 'partially_completed';
+  | 'partially_completed'
+  | 'step_up_required';
 
 export type ActionStatus =
   | 'pending'
@@ -70,7 +72,7 @@ export type ActionStatus =
 /** Final result payload after agent completes */
 export interface AgentResult {
   summary: string;
-  data?: unknown;
+  data?: any[];
   actionsCompleted: number;
   actionsFailed: number;
   actionsPending: number;
