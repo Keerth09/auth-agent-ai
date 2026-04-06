@@ -11,15 +11,23 @@ import {
   Sparkles,
   AlertTriangle,
   Shield,
+  Mail,
+  Send,
+  Trash2,
+  Zap,
+  XCircle,
+  CheckCircle2,
+  Bot,
+  Type,
 } from "lucide-react";
 
 type Risk = "READ" | "WRITE" | "DESTRUCTIVE";
 
 interface ExecutionStep {
-  icon: string;
+  icon: React.ReactNode;
   label: string;
   status: "running" | "completed" | "warning" | "error";
-  detail?: string;
+  detail?: React.ReactNode;
 }
 
 interface RunResult {
@@ -300,7 +308,7 @@ function SecurityModal({ onSuccess }: { onSuccess: () => void }) {
 
 const QUICK_TASKS = [
   {
-    icon: "📧",
+    icon: <Mail size={18} style={{ color: "#3b82f6" }} />,
     label: "Summarize Emails",
     task: "Summarize my last 5 emails",
     risk: "READ" as Risk,
@@ -310,7 +318,7 @@ const QUICK_TASKS = [
     color: "#3b82f6",
   },
   {
-    icon: "📤",
+    icon: <Send size={18} style={{ color: "#f59e0b" }} />,
     label: "Send Email",
     task: "Send email to team@hack.com about the vault update",
     risk: "WRITE" as Risk,
@@ -320,7 +328,7 @@ const QUICK_TASKS = [
     color: "#f59e0b",
   },
   {
-    icon: "🗑️",
+    icon: <Trash2 size={18} style={{ color: "#ef4444" }} />,
     label: "Delete Drafts",
     task: "Delete all draft emails in Gmail",
     risk: "DESTRUCTIVE" as Risk,
@@ -477,19 +485,24 @@ export default function RunPage() {
 
     // Step 1 — Classify intent via LLaMA 3
     addStepRef.current!({
-      icon: "🧠",
+      icon: <Brain size={16} />,
       label: "Classifying request with LLaMA 3...",
       status: "running",
     });
     await delay(400);
     updateLast({ 
       status: "completed",
-      detail: analysis ? `${analysis.source === 'llm' ? '🤖 LLaMA 3 (Groq)' : '🔤 Keyword'} · ${analysis.tasks.length} task(s) · Risk: ${riskLevel}` : `Risk: ${riskLevel}`,
+      detail: analysis ? (
+        <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+          {analysis.source === 'llm' ? <Bot size={14} style={{ display: "inline" }} /> : <Type size={14} style={{ display: "inline" }} />}
+          {analysis.source === 'llm' ? 'LLaMA 3 (Groq)' : 'Keyword'} · {analysis.tasks.length} task(s) · Risk: {riskLevel}
+        </span>
+      ) : `Risk: ${riskLevel}`,
     });
 
     // Step 2 — Permission engine
     addStepRef.current!({
-      icon: "🛡️",
+      icon: <Shield size={16} />,
       label: "Evaluating permission engine...",
       status: "running",
       detail: `Classified action → ${riskLevel}`,
@@ -499,7 +512,7 @@ export default function RunPage() {
 
     // ── Unified API Execution Path ──
     addStepRef.current!({
-      icon: "⚡",
+      icon: <Zap size={16} />,
       label: "Firing Zero-Trust Protocol...",
       status: "running",
     });
@@ -559,7 +572,7 @@ export default function RunPage() {
       const errMsg = err instanceof Error ? err.message : "Internal system error";
       updateLast({ status: "error" });
       addStepRef.current!({
-        icon: "❌",
+        icon: <XCircle size={16} />,
         label: "Execution Failed",
         status: "error",
         detail: errMsg,
@@ -576,7 +589,7 @@ export default function RunPage() {
 
     // Step 4 — Progress
     addStepRef.current!({
-      icon: "⚡",
+      icon: <Zap size={16} />,
       label: "Executing with scoped token...",
       status: "running",
       detail: "__progress__",
@@ -586,7 +599,7 @@ export default function RunPage() {
 
     // Step 5 — Done
     addStepRef.current!({
-      icon: "✅",
+      icon: <CheckCircle2 size={16} />,
       label: "Complete. Token discarded from memory.",
       status: "completed",
       detail: "Token was never stored · Audit log updated",
@@ -732,13 +745,13 @@ export default function RunPage() {
                 Risk Level:
               </span>
               {riskLevel === "READ" && (
-                <span className="chip-read">🟢 READ</span>
+                <span className="chip-read" style={{ display: "flex", alignItems: "center", gap: 4 }}><CheckCircle2 size={12} /> READ</span>
               )}
               {riskLevel === "WRITE" && (
-                <span className="chip-write">🟠 WRITE</span>
+                <span className="chip-write" style={{ display: "flex", alignItems: "center", gap: 4 }}><AlertTriangle size={12} /> WRITE</span>
               )}
               {riskLevel === "DESTRUCTIVE" && (
-                <span className="chip-destructive">🔴 DESTRUCTIVE</span>
+                <span className="chip-destructive" style={{ display: "flex", alignItems: "center", gap: 4 }}><ShieldAlert size={12} /> DESTRUCTIVE</span>
               )}
             </div>
           )}
@@ -770,7 +783,7 @@ export default function RunPage() {
                 Protocol Locked...
               </span>
             ) : (
-              "⚡ Execute Agent Task"
+              <span style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}><Zap size={16} /> Execute Agent Task</span>
             )}
           </button>
         </div>
@@ -830,7 +843,7 @@ export default function RunPage() {
           <div style={{ flex: 1, padding: 24, overflowY: "auto" }}>
             {!running && steps.length === 0 ? (
               <div className="execution-idle">
-                <div className="idle-ring">⚡</div>
+                <div className="idle-ring"><Zap size={24} color="var(--purple)" /></div>
                 <p
                   style={{
                     fontSize: 14,
@@ -1081,7 +1094,7 @@ export default function RunPage() {
                           alignItems: "center", justifyContent: "center", 
                           fontSize: 14, flexShrink: 0 
                         }}>
-                          🤖
+                          <Bot size={16} color="#fff" />
                         </div>
                         <div style={{ flex: 1, minWidth: 0, color: "var(--text-primary)", fontSize: 13, lineHeight: 1.6, whiteSpace: "pre-wrap" }}>
                           {runResult.result || runResult.status}
