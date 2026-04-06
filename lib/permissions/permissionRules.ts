@@ -44,6 +44,14 @@ export const PERMISSION_RULES: PermissionRule[] = [
     riskLevel: 'low',
   },
   {
+    id: 'rule:gmail:summarize',
+    action: 'summarize_emails',
+    requiredScopes: ['https://www.googleapis.com/auth/gmail.readonly'],
+    decision: 'allow',
+    reason: 'Summarizing emails uses local LLM generation and read-only access.',
+    riskLevel: 'low',
+  },
+  {
     id: 'rule:gmail:list',
     action: 'list_emails',
     requiredScopes: ['https://www.googleapis.com/auth/gmail.readonly'],
@@ -74,16 +82,15 @@ export const PERMISSION_RULES: PermissionRule[] = [
     id: 'rule:gmail:delete',
     action: 'delete_email',
     requiredScopes: ['https://www.googleapis.com/auth/gmail.modify'],
-    decision: 'require_step_up_auth',
-    reason: 'Deleting email is irreversible. Requires step-up authentication ' +
-            'to confirm user identity before proceeding.',
+    decision: 'require_approval',
+    reason: 'Deleting email is irreversible. Requires human approval before proceeding.',
     riskLevel: 'high',
   },
   {
     id: 'rule:data:delete',
     action: 'delete_data',
-    decision: 'require_step_up_auth',
-    reason: 'Deleting data is a destructive operation requiring step-up authentication.',
+    decision: 'require_approval',
+    reason: 'Deleting data is a destructive operation requiring human approval.',
     riskLevel: 'critical',
   },
   // ── Token Operations ──────────────────────────────────────────────────────

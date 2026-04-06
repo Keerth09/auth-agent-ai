@@ -1,64 +1,29 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import {
   Shield,
-  ShieldCheck,
-  ShieldOff,
-  ShieldAlert,
-  Zap,
-  Check,
-  X,
-  Sun,
-  Moon,
-  Sparkles,
-  PenLine,
-  Key,
-  Eye,
+  Bell,
+  User,
+  History,
+  CheckCircle2,
+  BarChart,
+  PenTool,
+  Bot,
+  TerminalSquare,
+  AlertTriangle,
   ArrowRight,
-  Terminal,
   Lock,
-  Search,
-  Activity,
+  Zap,
   Fingerprint,
-  Workflow,
-  Globe
+  FileText,
+  Activity,
+  UserCheck
 } from "lucide-react";
 
-const allTerminalLines = [
-  { prefix: "$", text: ' agent.run("Summarize my last 5 emails")', color: "#94a3b8" },
-  { prefix: "»", text: " Parsing intent: gmail.read [READ]", color: "#94a3b8" },
-  { prefix: "»", text: " Permission engine: AUTO-APPROVED", color: "#10b981" },
-  { prefix: "»", text: " Fetching token from Auth0 Vault...", color: "#94a3b8" },
-  { prefix: "»", text: " Token fingerprint: ...a4f2 | Agent sees: undefined", color: "#475569" },
-  { prefix: "✓", text: " Complete. Token discarded. 847ms", color: "#10b981" },
-  { prefix: "$", text: ' agent.run("Send reply to John")', color: "#94a3b8" },
-  { prefix: "»", text: " Permission engine: WRITE — PAUSED", color: "#f59e0b" },
-  { prefix: "⏸", text: " Awaiting human approval in dashboard...", color: "#f59e0b" },
-  { prefix: "$", text: ' agent.run("Delete all drafts")', color: "#94a3b8" },
-  { prefix: "!", text: " DESTRUCTIVE action — MFA required", color: "#ef4444" },
-  { prefix: "»", text: " Auth0 step-up authentication triggered", color: "#ef4444" },
-];
-
 export default function LandingPage() {
-  const [isDark, setIsDark] = useState(true);
-  const [announcementVisible, setAnnouncementVisible] = useState(true);
-  const [terminalLines, setTerminalLines] = useState<{ prefix: string; text: string; color: string }[]>([]);
   const [scrolled, setScrolled] = useState(false);
-
-  useEffect(() => {
-    let currentLine = 0;
-    const interval = setInterval(() => {
-      if (currentLine <= allTerminalLines.length) {
-        setTerminalLines(allTerminalLines.slice(0, currentLine));
-        currentLine++;
-      } else {
-        setTerminalLines([]);
-        currentLine = 0;
-      }
-    }, 700);
-    return () => clearInterval(interval);
-  }, []);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -66,315 +31,243 @@ export default function LandingPage() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  useEffect(() => {
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add("revealed");
-        }
-      });
-    }, { threshold: 0.1 });
-    document.querySelectorAll(".reveal").forEach((el) => observer.observe(el));
-    return () => observer.disconnect();
-  }, []);
-
-  const toggleTheme = () => {
-    setIsDark(!isDark);
-    if (!isDark) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-  };
-
   return (
-    <div className={`min-h-screen landing-page-wrapper w-full overflow-x-hidden flex flex-col ${isDark ? "dark" : ""}`}>
-      {/* ANNOUNCEMENT */}
-      {announcementVisible && (
-        <div className="w-full h-10 flex shrink-0 items-center justify-center bg-purple-600 text-white text-xs font-bold z-50 sticky top-0 tracking-widest uppercase">
-          <Sparkles size={14} className="mr-2" />
-          VaultProxy &mdash; The Zero-Trust Protocol for AI Agents
-          <button onClick={() => setAnnouncementVisible(false)} className="absolute right-4 opacity-70 hover:opacity-100 transition-opacity"><X size={16} /></button>
-        </div>
-      )}
-
-      {/* NAVIGATION */}
-      <nav className={`fixed w-full h-20 z-40 transition-all duration-500 ${scrolled ? 'backdrop-blur-xl border-b border-[var(--border)] bg-[var(--bg-primary)]/80' : ''}`} style={{ top: announcementVisible ? '40px' : '0' }}>
-        <div className="max-w-7xl mx-auto h-full px-8 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-             <div className="w-10 h-10 rounded-xl bg-purple-600 flex items-center justify-center shadow-lg shadow-purple-500/20">
-                <Shield size={22} className="text-white" />
-             </div>
-             <span className="text-2xl font-extrabold tracking-tighter text-[var(--text-primary)] font-syne">VaultProxy</span>
+    <div style={{ minHeight: '100vh', backgroundColor: '#0a0a0f', color: '#cbd5e1', width: '100%', display: 'flex', flexDirection: 'column' }}>
+      
+      {/* ── TopAppBar ────────────────────────────────────────────────────────── */}
+      <header 
+        style={{ 
+          position: 'fixed', top: 0, left: 0, width: '100%', zIndex: 100, height: '80px',
+          backgroundColor: scrolled ? 'rgba(10, 10, 15, 0.95)' : 'transparent',
+          backdropFilter: scrolled ? 'blur(10px)' : 'none',
+          borderBottom: scrolled ? '1px solid rgba(255,255,255,0.05)' : 'none',
+          transition: 'all 0.3s ease'
+        }}
+      >
+        <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 24px', height: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '32px' }}>
+            <span style={{ fontSize: '24px', fontWeight: 'bold', letterSpacing: '-1px', color: '#fff', textTransform: 'uppercase', fontFamily: '"Syne", sans-serif' }}>
+              VaultProxy
+            </span>
+            <nav className="hidden md:flex" style={{ gap: '24px' }}>
+              <Link href="/dashboard" style={{ color: '#a78bfa', borderBottom: '2px solid #8b5cf6', fontSize: '14px', fontWeight: 500, height: '80px', display: 'flex', alignItems: 'center' }}>Terminal</Link>
+              <Link href="/dashboard/agents" className="hover:text-white" style={{ color: '#94a3b8', fontSize: '14px', fontWeight: 500, height: '80px', display: 'flex', alignItems: 'center', transition: 'color 0.2s' }}>Agents</Link>
+              <Link href="/dashboard/audit" className="hover:text-white" style={{ color: '#94a3b8', fontSize: '14px', fontWeight: 500, height: '80px', display: 'flex', alignItems: 'center', transition: 'color 0.2s' }}>Audit Log</Link>
+              <Link href="/dashboard/policies" className="hover:text-white" style={{ color: '#94a3b8', fontSize: '14px', fontWeight: 500, height: '80px', display: 'flex', alignItems: 'center', transition: 'color 0.2s' }}>Policies</Link>
+            </nav>
           </div>
-          
-          <div className="hidden md:flex items-center gap-10">
-             {["Architecture", "Security", "How it Works"].map((item) => (
-                <a key={item} href={`#${item.toLowerCase().replace(/ /g, "-")}`} className="text-sm font-semibold text-[var(--text-secondary)] hover:text-purple-500 transition-colors uppercase tracking-widest">{item}</a>
-             ))}
-          </div>
-
-          <div className="flex items-center gap-6">
-            <button onClick={toggleTheme} className="p-2.5 rounded-xl border border-[var(--border)] hover:bg-[var(--bg-secondary)] transition-all">
-               {isDark ? <Sun size={18} className="text-amber-400" /> : <Moon size={18} className="text-slate-600" />}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <button style={{ color: '#a78bfa', background: 'transparent', border: 'none', cursor: 'pointer', padding: '8px' }}>
+              <Shield size={20} />
             </button>
-            <a href="/dashboard" className="px-6 py-3 rounded-xl bg-purple-600 text-white font-bold text-sm shadow-xl shadow-purple-500/10 hover:scale-105 transition-transform active:scale-95">
-               Launch Protocol
-            </a>
-          </div>
-        </div>
-      </nav>
-
-      {/* HERO SECTION */}
-      <section id="hero" className="relative min-h-screen pt-40 pb-20 flex flex-col items-center justify-center px-8 grid-bg shrink-0">
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-purple-500/5 blur-[120px] rounded-full pointer-events-none" />
-        <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-pink-500/5 blur-[120px] rounded-full pointer-events-none" />
-
-        <div className="z-10 text-center max-w-5xl flex flex-col items-center">
-          <div className="px-5 py-2 rounded-full border border-purple-500/30 bg-purple-500/5 text-purple-400 text-xs font-black uppercase tracking-[0.3em] mb-10 animate-float flex items-center gap-3">
-            <div className="w-2 h-2 rounded-full bg-purple-500 animate-pulse" />
-            Authorized To Act &mdash; Hackathon 2026
-          </div>
-          
-          <h1 className="text-6xl md:text-9xl font-extrabold mb-10 leading-[0.9] tracking-tighter text-[var(--text-primary)] font-syne">
-            AI Action,<br/>
-            <span className="italic font-normal opacity-50">Zero</span> <span className="gradient-text">Trust.</span>
-          </h1>
-          
-          <p className="text-xl md:text-2xl text-[var(--text-secondary)] mb-14 max-w-3xl leading-relaxed font-medium">
-             A high-performance middleware for identity-aware AI Agents. 
-             Isolate <span className="text-purple-400">OAuth tokens</span> in the Auth0 Vault and never let agents touch raw credentials.
-          </p>
-
-          <div className="flex flex-wrap gap-5 mb-24 justify-center">
-            <a href="/auth/login" className="px-10 py-5 rounded-2xl bg-purple-600 text-white font-black text-lg shadow-2xl shadow-purple-500/30 hover:shadow-purple-500/50 hover:scale-105 transition-all flex items-center gap-3">
-               Start Securing Agents <ArrowRight size={20} />
-            </a>
-            <a href="#" className="px-10 py-5 rounded-2xl border-2 border-[var(--border)] font-bold text-lg hover:bg-[var(--bg-secondary)] hover:border-purple-500/50 transition-all text-[var(--text-primary)]">
-               Read Security Audit
-            </a>
-          </div>
-
-          {/* TERMINAL UI */}
-          <div className="w-full max-w-4xl rounded-3xl overflow-hidden border border-[var(--border)] shadow-3xl bg-[#08080c] relative group hover:scale-[1.01] transition-transform">
-            <div className="absolute inset-0 bg-purple-500/5 group-hover:bg-purple-500/10 transition-colors pointer-events-none" />
-            <div className="h-14 bg-[#12121e] px-8 flex items-center justify-between border-b border-white/5">
-               <div className="flex gap-2.5">
-                 <div className="w-3.5 h-3.5 rounded-full bg-red-500/40" />
-                 <div className="w-3.5 h-3.5 rounded-full bg-yellow-500/40" />
-                 <div className="w-3.5 h-3.5 rounded-full bg-green-500/40" />
-               </div>
-               <div className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-[0.3em] text-slate-500 font-bold">
-                  <Terminal size={12} /> vault_proxy_runtime // status: active
-               </div>
-               <div className="w-20" />
-            </div>
-            <div className="p-10 font-mono text-sm md:text-base text-slate-400 min-h-[280px] text-left leading-relaxed">
-               {terminalLines.map((line, i) => (
-                 <div key={i} className="mb-2 reveal">
-                   <span style={{ color: line.color }} className="mr-5 opacity-70">{line.prefix}</span>
-                   <span className="text-[var(--text-primary)]">{line.text}</span>
-                 </div>
-               ))}
-               <div className="mt-2 text-purple-500/50 flex items-center gap-2">
-                  <span className="w-2 h-4 bg-purple-500 animate-pulse" />
-                  <span className="text-xs uppercase tracking-widest font-bold">Awaiting Input...</span>
-               </div>
+            <button style={{ color: '#a78bfa', background: 'transparent', border: 'none', cursor: 'pointer', padding: '8px' }}>
+              <Bell size={20} />
+            </button>
+            <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: 'rgba(124, 58, 237, 0.2)', color: '#a78bfa', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(139, 92, 246, 0.3)' }}>
+              <User size={16} />
             </div>
           </div>
         </div>
-      </section>
+      </header>
 
-      {/* ATTACK SURFACE SECTION */}
-      <section id="architecture" className="py-40 w-full max-w-7xl mx-auto px-8 reveal shrink-0">
-        <div className="text-center mb-24">
-           <span className="text-xs font-black text-rose-500 uppercase tracking-[0.4em] mb-6 block">Defense Architecture</span>
-           <h2 className="text-4xl md:text-6xl font-black font-syne mb-10 leading-tight">Eliminate The Attack Surface</h2>
-        </div>
+      <main style={{ display: 'flex', flexDirection: 'column', width: '100%', alignContent: 'center' }}>
         
-        <div className="grid md:grid-cols-2 gap-10">
-          <div className="p-12 rounded-[2.5rem] bg-rose-500/5 border border-rose-500/10 group hover:border-rose-500/30 transition-all relative overflow-hidden">
-            <div className="absolute -top-10 -right-10 w-40 h-40 bg-rose-500/10 blur-[50px] rounded-full" />
-            <ShieldOff className="text-rose-500 mb-10" size={48} strokeWidth={1.5} />
-            <h3 className="text-3xl font-bold mb-8 font-syne">The Vulnerable Route</h3>
-            <div className="p-6 rounded-2xl bg-black/60 font-mono text-xs text-rose-400 mb-10 border border-rose-500/20 leading-loose">
-              <span className="opacity-40"># Memory Dump // Leak detected</span><br/>
-              Authorization: Bearer <span className="px-1 bg-rose-500/20 rounded">ya29.a0AfH6SMB...</span><br/>
-              <span className="text-rose-600 mt-2 block">Critical: Token exposed in plaintext environment</span>
+        {/* ── Hero Section ────────────────────────────────────────────────────── */}
+        <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: '180px', paddingBottom: '100px' }}>
+          <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 24px', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+            
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 16px', borderRadius: '99px', backgroundColor: '#111118', border: '1px solid rgba(255,255,255,0.1)', marginBottom: '32px' }}>
+              <div style={{ width: '8px', height: '8px', backgroundColor: '#4cd7f6', borderRadius: '50%', boxShadow: '0 0 8px #4cd7f6' }}></div>
+              <span style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '2px', fontWeight: 'bold', color: '#4cd7f6' }}>System Online</span>
+              <span className="hidden md:inline" style={{ fontSize: '12px', color: '#94a3b8', borderLeft: '1px solid rgba(255,255,255,0.1)', paddingLeft: '12px', marginLeft: '4px' }}>v2.4.0 Deployment</span>
             </div>
-            <ul className="space-y-6 text-lg font-medium text-[var(--text-secondary)]">
-               <li className="flex gap-4 items-center"><X size={20} className="text-rose-500 flex-shrink-0" /> Long-lived raw tokens in memory</li>
-               <li className="flex gap-4 items-center"><X size={20} className="text-rose-500 flex-shrink-0" /> Zero control after agent assignment</li>
-               <li className="flex gap-4 items-center"><X size={20} className="text-rose-500 flex-shrink-0" /> Lateral movement via stolen keys</li>
-            </ul>
-          </div>
-
-          <div className="p-12 rounded-[2.5rem] bg-emerald-500/5 border border-emerald-500/10 group hover:border-emerald-500/30 transition-all relative overflow-hidden">
-            <div className="absolute -top-10 -right-10 w-40 h-40 bg-emerald-500/10 blur-[50px] rounded-full" />
-            <ShieldCheck className="text-emerald-500 mb-10" size={48} strokeWidth={1.5} />
-            <h3 className="text-3xl font-bold mb-8 font-syne">The VaultProxy Way</h3>
-             <div className="p-6 rounded-2xl bg-black/60 font-mono text-xs text-emerald-400 mb-10 border border-emerald-500/20 leading-loose">
-              <span className="opacity-40"># Scoped Proxy // Secure Handshake</span><br/>
-              X-Vault-Sig: <span className="px-1 bg-emerald-500/20 rounded">sha256_v2_7c3a...</span><br/>
-              <span className="text-emerald-500 mt-2 block italic">Success: Ephemeral session active</span>
-            </div>
-            <ul className="space-y-6 text-lg font-medium text-[var(--text-secondary)]">
-               <li className="flex gap-4 items-center"><Check size={20} className="text-emerald-500 flex-shrink-0" /> Tokens strictly isolated in Auth0</li>
-               <li className="flex gap-4 items-center"><Check size={20} className="text-emerald-500 flex-shrink-0" /> Dynamic single-use token injection</li>
-               <li className="flex gap-4 items-center"><Check size={20} className="text-emerald-500 flex-shrink-0" /> Real-time revocation of all sessions</li>
-            </ul>
-          </div>
-        </div>
-      </section>
-
-      {/* METRICS SHOWDOWN */}
-      <section className="py-32 bg-[var(--bg-secondary)] border-y border-[var(--border)] shrink-0">
-         <div className="max-w-7xl mx-auto px-8 grid grid-cols-2 md:grid-cols-4 gap-16">
-            {[
-               { icon: Activity, label: "Real-time Monitoring", value: "24/7" },
-               { icon: Lock, label: "Token Exposure", value: "0.0%" },
-               { icon: Search, label: "Audit Resolution", value: "100%" },
-               { icon: Globe, label: "Edge Propagation", value: "<10ms" }
-            ].map((m, i) => (
-               <div key={i} className="flex flex-col items-center text-center reveal">
-                  <div className="w-16 h-16 rounded-2xl bg-[var(--bg-primary)] border border-[var(--border)] flex items-center justify-center mb-8 shadow-inner">
-                     <m.icon className="text-purple-500" size={28} />
-                  </div>
-                  <div className="text-5xl font-black font-syne mb-3 text-[var(--text-primary)]">{m.value}</div>
-                  <div className="text-[10px] font-black uppercase tracking-[0.3em] text-[var(--text-muted)]">{m.label}</div>
-               </div>
-            ))}
-         </div>
-      </section>
-
-      {/* HOW IT WORKS DYNAMIC */}
-      <section id="how-it-works" className="py-40 w-full reveal shrink-0 relative overflow-hidden">
-        <div className="max-w-7xl mx-auto px-8">
-           <div className="text-center max-w-3xl mx-auto mb-32">
-              <span className="text-xs font-black text-purple-500 uppercase tracking-[0.4em] mb-6 block">Pipeline Workflow</span>
-              <h2 className="text-4xl md:text-7xl font-black font-syne mb-10 leading-tight">Orchestrated Security</h2>
-              <p className="text-xl text-[var(--text-secondary)]">A three-stage defense protocol protecting your digital identity from automated agent exploits.</p>
-           </div>
-
-           <div className="grid md:grid-cols-3 gap-12 relative">
-             <div className="hidden lg:block absolute top-[120px] left-[15%] w-[70%] h-0.5 bg-gradient-to-r from-transparent via-purple-500/20 to-transparent -z-10" />
-             
-             {[
-               { step: "01", title: "Secure Handshake", icon: Key, color: "var(--purple)", desc: "Users link OAuth connections via Auth0. The master tokens remain encrypted in the manage-vault." },
-               { step: "02", title: "Intent Interception", icon: Workflow, color: "#f59e0b", desc: "Our engine parses the agent's intent, scoring it against historical risk patterns and user policies." },
-               { step: "03", title: "Single-Action Auth", icon: Zap, color: "#10b981", desc: "Upon approval or MFA, a temporary token is pulled from the vault, used once, and instantly discarded." }
-             ].map((item, i) => (
-                <div key={i} className="group relative">
-                   <div className="p-12 rounded-[3rem] bg-[var(--bg-card)] border border-[var(--border)] hover:border-purple-500/50 transition-all hover:-translate-y-2 h-full flex flex-col items-center text-center">
-                     <div className="w-20 h-20 rounded-[2rem] bg-[var(--bg-primary)] border border-white/5 flex items-center justify-center mb-10 shadow-2xl group-hover:scale-110 transition-transform">
-                        <item.icon size={32} style={{ color: item.color }} />
-                     </div>
-                     <span className="text-6xl font-black opacity-5 absolute top-10 right-12 group-hover:opacity-10 transition-opacity font-syne">{item.step}</span>
-                     <h3 className="text-2xl font-bold mb-6 font-syne">{item.title}</h3>
-                     <p className="text-[var(--text-secondary)] leading-relaxed font-medium">{item.desc}</p>
-                   </div>
-                </div>
-             ))}
-           </div>
-        </div>
-      </section>
-
-      {/* TRUST TIERS SECTION */}
-      <section id="security" className="py-40 w-full max-w-7xl mx-auto px-8 reveal shrink-0">
-        <div className="flex flex-col md:flex-row items-end justify-between mb-24 gap-10">
-           <div className="max-w-2xl">
-              <span className="text-xs font-black text-emerald-500 uppercase tracking-[0.4em] mb-6 block">Permission Matrix</span>
-              <h2 className="text-4xl md:text-7xl font-black font-syne leading-[0.95] text-[var(--text-primary)]">The Anatomy of a Trust Tier</h2>
-           </div>
-           <div className="px-6 py-3 rounded-2xl bg-purple-600/10 border border-purple-500/20 text-purple-400 text-sm font-bold flex items-center gap-3">
-              <Activity size={18} /> Engine V3.2 Active
-           </div>
-        </div>
-
-        <div className="grid md:grid-cols-3 gap-10">
-           {[
-             { title: "Read Intelligence", badge: "Non-Intrusive", icon: Eye, color: "#3b82f6", desc: "Safe contextual fetching like email summaries or calendar views. Executes immediately via the edge proxy." },
-             { title: "Write Permission", badge: "Quarantined", icon: PenLine, color: "#f59e0b", desc: "Mutating actions like sending messages or posting updates. Pauses for human confirmation in the dashboard." },
-             { title: "Destructive Flow", badge: "Hard-Locked", icon: ShieldAlert, color: "#ef4444", desc: "High-stakes deletions or data transfers. Triggers an Auth0 MFA Challenge to prove physical presence." }
-           ].map((tier, i) => (
-             <div key={i} className="rounded-[2.5rem] border border-[var(--border)] bg-[var(--bg-card)] overflow-hidden transition-all hover:border-[var(--purple)] group">
-                <div className="h-2 w-full" style={{ background: tier.color }} />
-                <div className="p-12">
-                   <div className="w-16 h-16 rounded-2xl bg-[var(--bg-primary)] flex items-center justify-center mb-8 border border-white/5">
-                      <tier.icon size={32} style={{ color: tier.color }} />
-                   </div>
-                   <h3 className="text-2xl font-black mb-3 font-syne">{tier.title}</h3>
-                   <div className="inline-block px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest mb-10 bg-white/5 border border-white/10" style={{ color: tier.color }}>{tier.badge}</div>
-                   <p className="text-lg text-[var(--text-secondary)] leading-relaxed font-medium mb-12">{tier.desc}</p>
-                   
-                   <div className="pt-10 border-t border-white/5">
-                      <div className="flex items-center gap-3 text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest">
-                         <Fingerprint size={16} /> Verified By Vault
-                      </div>
-                   </div>
-                </div>
-             </div>
-           ))}
-        </div>
-      </section>
-
-      {/* FINAL CTA ENHANCED */}
-      <section className="py-60 w-full relative overflow-hidden bg-black shrink-0">
-         <div className="absolute inset-0 grid-bg opacity-20" />
-         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-purple-600/10 blur-[160px] rounded-full pointer-events-none" />
-         
-         <div className="relative z-10 max-w-5xl mx-auto px-8 text-center flex flex-col items-center">
-           <Sparkles className="text-purple-500 mb-10 animate-float" size={64} />
-           <h2 className="text-5xl md:text-9xl font-black mb-14 font-syne leading-[0.8] tracking-tighter text-white">Stop Leaking<br/><span className="text-purple-600">Digital Identity.</span></h2>
-           <p className="text-xl md:text-2xl mb-16 font-medium text-slate-400 max-w-3xl leading-relaxed">
-              Deploy the Agent Control Center in under 60 seconds and experience the zero-trust revolution.
-           </p>
-           <div className="flex flex-col md:flex-row gap-6">
-              <a href="/auth/login" className="px-14 py-7 rounded-[2rem] bg-white text-black font-black text-xl hover:scale-105 transition-all shadow-4xl flex items-center gap-4">
-                 Get Instant Access <ArrowRight size={24} />
-              </a>
-              <div className="px-10 py-7 rounded-[2rem] border border-white/10 text-white font-bold text-lg flex items-center gap-4 bg-white/5 backdrop-blur-xl">
-                 <div className="flex items-center -space-x-4">
-                    {[1,2,3].map(i => <div key={i} className="w-10 h-10 rounded-full border-2 border-black bg-slate-800" />)}
-                 </div>
-                 <span className="text-sm">Trusted by 10k+ Agents</span>
-              </div>
-           </div>
-         </div>
-      </section>
-
-      {/* PREMIUM FOOTER */}
-      <footer className="py-24 border-t border-[var(--border)] px-8 grid md:grid-cols-2 gap-20 items-center justify-between shrink-0 bg-[#06060a]">
-         <div className="flex flex-col gap-6 items-start">
-            <div className="flex items-center gap-3">
-               <div className="w-8 h-8 rounded-lg bg-purple-600 flex items-center justify-center">
-                  <Shield size={18} className="text-white" />
-               </div>
-               <span className="text-xl font-black font-syne text-[var(--text-primary)]">VaultProxy</span>
-            </div>
-            <p className="text-sm text-[var(--text-muted)] font-medium max-w-xs">
-               Securing the intersection of Artificial Intelligence and Digital Identity.
+            
+            <h1 className="font-syne" style={{ fontSize: 'clamp(40px, 8vw, 88px)', fontWeight: 800, letterSpacing: '-2px', color: '#fff', marginBottom: '32px', lineHeight: 1.1 }}>
+              AI Agents Shouldn&apos;t Have <br/>
+              <span style={{ backgroundImage: 'linear-gradient(to right, #a78bfa, #4cd7f6)', WebkitBackgroundClip: 'text', color: 'transparent' }}>Permanent Access</span>
+            </h1>
+            
+            <p style={{ fontSize: '18px', color: '#94a3b8', maxWidth: '640px', margin: '0 auto 48px auto', lineHeight: 1.6 }}>
+              VaultProxy creates a secure air-gap between your sensitive APIs and autonomous agents. Just-In-Time credentials, real-time human verification, and forensic audit logs.
             </p>
-            <div className="font-bold opacity-30 uppercase tracking-[0.3em] text-[10px]">
-               &copy; 2026 &mdash; Built for the Auth0 Global Hackathon
+            
+            <div style={{ display: 'flex', flexDirection: 'row', gap: '16px', marginBottom: '80px', flexWrap: 'wrap', justifyContent: 'center' }}>
+              <Link href="/auth/login" style={{ padding: '16px 32px', backgroundColor: '#7c3aed', color: '#fff', fontWeight: 'bold', borderRadius: '12px', textTransform: 'uppercase', letterSpacing: '2px', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
+                Start Secure <ArrowRight size={16} />
+              </Link>
+              <Link href="/dashboard" style={{ padding: '16px 32px', backgroundColor: '#111118', color: '#fff', fontWeight: 'bold', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', textTransform: 'uppercase', letterSpacing: '2px', fontSize: '14px', textDecoration: 'none' }}>
+                View Demo
+              </Link>
             </div>
-         </div>
+            
+            {/* Dashboard Preview Component */}
+            <div style={{ width: '100%', maxWidth: '800px', margin: '0 auto', borderRadius: '16px', padding: '24px', backgroundColor: '#0f0f1a', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 20px 40px rgba(0,0,0,0.5)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '16px', marginBottom: '24px' }}>
+                <div style={{ display: 'flex', gap: '6px' }}>
+                  <div style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: 'rgba(239, 68, 68, 0.4)' }}></div>
+                  <div style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: 'rgba(245, 158, 11, 0.4)' }}></div>
+                  <div style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: 'rgba(16, 185, 129, 0.4)' }}></div>
+                </div>
+                <div style={{ marginLeft: '16px', padding: '4px 12px', borderRadius: '4px', backgroundColor: 'rgba(0,0,0,0.4)', fontSize: '10px', fontFamily: 'monospace', color: '#a78bfa', textTransform: 'uppercase', letterSpacing: '2px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Lock size={10} /> https://vault.proxy/terminal
+                </div>
+              </div>
+              <div style={{ borderRadius: '8px', backgroundColor: '#050508', border: '1px solid rgba(255,255,255,0.05)', padding: '24px', fontFamily: 'monospace', fontSize: '14px', color: '#cbd5e1', textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <span style={{ color: '#a78bfa' }}>❯</span>
+                  <span style={{ color: '#94a3b8' }}>agent.run("Delete all drafts")</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', opacity: 0.7 }}>
+                  <span style={{ color: '#64748b' }}>·</span>
+                  <span style={{ color: '#64748b' }}>Analyzing intent...</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '8px' }}>
+                  <span style={{ color: '#ef4444' }}>⚠</span>
+                  <span style={{ color: '#f87171' }}>HIGH RISK: DESTRUCTIVE ACTION (gmail.delete)</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', backgroundColor: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', padding: '12px', borderRadius: '4px', marginTop: '8px' }}>
+                  <Lock size={14} style={{ color: '#f87171' }} />
+                  <span style={{ color: '#fca5a5', fontWeight: 'bold', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '2px' }}>Awaiting 2FA / Passkey Verification...</span>
+                </div>
+              </div>
+            </div>
+            
+          </div>
+        </div>
 
-         <div className="flex flex-wrap justify-center md:justify-end gap-16">
-           <div className="flex flex-col gap-5">
-              <span className="text-[10px] font-black uppercase tracking-widest text-white">Open Source</span>
-              <div className="flex flex-col gap-3">
-                 {["GitHub Repository", "MIT License", "Security.md"].map(t => <a key={t} href="#" className="text-sm font-medium text-[var(--text-muted)] hover:text-white transition-colors">{t}</a>)}
+        {/* ── Problem Section ─────────────────────────────────────────────────── */}
+        <div style={{ width: '100%', backgroundColor: '#050508', borderTop: '1px solid rgba(255,255,255,0.05)', borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '100px 0' }}>
+          <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 24px', width: '100%' }}>
+            <div className="grid lg:grid-cols-2 gap-16" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '64px', alignItems: 'center' }}>
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <div style={{ color: '#f87171', fontFamily: '"Syne", sans-serif', fontSize: '14px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '3px', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Activity size={16} /> Security Threat Analysis
+                </div>
+                <h2 className="font-syne" style={{ fontSize: 'clamp(32px, 5vw, 48px)', fontWeight: 'bold', color: '#fff', marginBottom: '32px', lineHeight: 1.2 }}>
+                  The Hidden Risk of <br/>AI Automation
+                </h2>
+                <p style={{ color: '#94a3b8', fontSize: '18px', marginBottom: '40px', lineHeight: 1.6 }}>
+                  Traditional API keys are static. When you give an AI Agent a key, you&apos;re giving it permanent, unmonitored access to your most sensitive data. One prompt injection could compromise your entire infrastructure.
+                </p>
+                
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                  <div style={{ display: 'flex', gap: '16px', padding: '20px', borderRadius: '12px', backgroundColor: 'rgba(239, 68, 68, 0.05)', border: '1px solid rgba(239, 68, 68, 0.1)', borderLeft: '4px solid #ef4444' }}>
+                    <AlertTriangle style={{ color: '#ef4444', flexShrink: 0, marginTop: '4px' }} size={24} />
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      <h4 style={{ color: '#fff', fontWeight: 'bold', marginBottom: '4px' }}>Static Key Exposure</h4>
+                      <p style={{ fontSize: '14px', color: 'rgba(248, 113, 113, 0.8)', lineHeight: 1.6, margin: 0 }}>API keys stored in agent memory are vulnerable to extraction via clever prompting.</p>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', gap: '16px', padding: '20px', borderRadius: '12px', backgroundColor: 'rgba(245, 158, 11, 0.05)', border: '1px solid rgba(245, 158, 11, 0.1)', borderLeft: '4px solid #f59e0b' }}>
+                    <Bot style={{ color: '#f59e0b', flexShrink: 0, marginTop: '4px' }} size={24} />
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      <h4 style={{ color: '#fff', fontWeight: 'bold', marginBottom: '4px' }}>Unbounded Execution</h4>
+                      <p style={{ fontSize: '14px', color: 'rgba(251, 146, 60, 0.8)', lineHeight: 1.6, margin: 0 }}>Agents can perform destructive actions recursively without intermediate approval.</p>
+                    </div>
+                  </div>
+                </div>
               </div>
-           </div>
-           <div className="flex flex-col gap-5">
-              <span className="text-[10px] font-black uppercase tracking-widest text-white">Developer</span>
-              <div className="flex flex-col gap-3">
-                 {["Documentation", "API Reference", "Architecture"].map(t => <a key={t} href="#" className="text-sm font-medium text-[var(--text-muted)] hover:text-white transition-colors">{t}</a>)}
+              
+              <div style={{ display: 'flex', width: '100%' }}>
+                <div style={{ backgroundColor: '#0f0f1a', padding: '32px', borderRadius: '24px', border: '1px solid rgba(239, 68, 68, 0.2)', display: 'flex', flexDirection: 'column', width: '100%', boxShadow: '0 20px 40px rgba(0,0,0,0.5)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '48px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      <div style={{ fontSize: '10px', textTransform: 'uppercase', fontWeight: 'bold', color: '#ef4444', letterSpacing: '2px', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px', opacity: 0.8 }}>
+                        <div style={{ width: '6px', height: '6px', backgroundColor: '#ef4444', borderRadius: '50%' }}></div> Alert: Unauthorized Call
+                      </div>
+                      <h4 className="font-syne" style={{ fontSize: '24px', fontWeight: 'bold', color: '#fff', margin: 0 }}>Injection Detected</h4>
+                    </div>
+                    <Shield size={36} style={{ color: '#ef4444', opacity: 0.8 }} strokeWidth={1.5} />
+                  </div>
+                  
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+                    <div style={{ height: '6px', width: '100%', backgroundColor: 'rgba(0,0,0,0.4)', borderRadius: '99px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.05)' }}>
+                      <div style={{ height: '100%', backgroundColor: '#ef4444', width: '98%', boxShadow: '0 0 10px #ef4444' }}></div>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', fontFamily: 'monospace', color: '#94a3b8' }}>
+                      <span>THREAT LEVEL: CRITICAL</span>
+                      <span style={{ color: '#f87171' }}>98.2% CONFIDENCE</span>
+                    </div>
+                  </div>
+                  
+                  <div style={{ backgroundColor: '#050508', padding: '20px', borderRadius: '12px', fontFamily: 'monospace', fontSize: '12px', color: 'rgba(248, 113, 113, 0.9)', border: '1px solid rgba(239, 68, 68, 0.2)', lineHeight: 1.6, display: 'flex', flexDirection: 'column' }}>
+                    <span><span style={{ color: '#64748b' }}>&gt; Agent attempted to:</span> <span style={{ color: '#fff' }}>"DELETE FROM users WHERE admin = true"</span></span>
+                    <span style={{ marginTop: '16px' }}><span style={{ color: '#64748b' }}>&gt; Analysis:</span> Malicious Intent Detected</span>
+                    <span style={{ marginTop: '8px' }}><span style={{ color: '#64748b' }}>&gt; Action:</span> <span style={{ fontWeight: 'bold', backgroundColor: 'rgba(239, 68, 68, 0.2)', padding: '4px 8px', borderRadius: '4px', color: '#fca5a5' }}>REQUEST QUARANTINED</span></span>
+                  </div>
+                </div>
               </div>
-           </div>
-         </div>
-      </footer>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Solution Section (Bento Grid) ──────────────────────────────────────── */}
+        <div style={{ width: '100%', padding: '100px 0' }}>
+          <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 24px', width: '100%' }}>
+            <div style={{ textAlign: 'center', marginBottom: '80px', maxWidth: '768px', margin: '0 auto 80px auto', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <h2 className="font-syne" style={{ fontSize: 'clamp(32px, 5vw, 48px)', fontWeight: 'bold', color: '#fff', marginBottom: '24px' }}>Zero-Trust for AI Agents</h2>
+              <p style={{ color: '#94a3b8', fontSize: '18px', margin: 0 }}>VaultProxy sits between your AI and your infrastructure, enforcing strict security protocols for every single request.</p>
+            </div>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px', width: '100%' }}>
+              
+              <div style={{ backgroundColor: '#111118', border: '1px solid rgba(255,255,255,0.05)', padding: '40px', borderRadius: '24px', display: 'flex', flexDirection: 'column' }}>
+                <History style={{ color: '#a78bfa', marginBottom: '24px' }} size={40} strokeWidth={1.5} />
+                <h3 className="font-syne" style={{ fontSize: '24px', fontWeight: 'bold', color: '#fff', marginBottom: '16px' }}>JIT Access Control</h3>
+                <p style={{ color: '#94a3b8', marginBottom: 'auto', lineHeight: 1.6 }}>Credentials are generated on-the-fly and expire immediately after the AI task is completed. No more permanent keys living in agent logs.</p>
+              </div>
+              
+              <div style={{ backgroundColor: '#111118', border: '1px solid rgba(255,255,255,0.05)', padding: '40px', borderRadius: '24px', display: 'flex', flexDirection: 'column' }}>
+                <UserCheck style={{ color: '#4cd7f6', marginBottom: '24px' }} size={40} strokeWidth={1.5} />
+                <h3 className="font-syne" style={{ fontSize: '24px', fontWeight: 'bold', color: '#fff', marginBottom: '16px' }}>Human-in-the-loop</h3>
+                <p style={{ color: '#94a3b8', fontSize: '14px', lineHeight: 1.6 }}>High-risk actions require one-tap approval from a mobile device (2FA/MFA) before the agent can proceed.</p>
+              </div>
+              
+              <div style={{ backgroundColor: '#111118', border: '1px solid rgba(255,255,255,0.05)', padding: '40px', borderRadius: '24px', display: 'flex', flexDirection: 'column' }}>
+                <BarChart style={{ color: '#fb923c', marginBottom: '24px' }} size={40} strokeWidth={1.5} />
+                <h3 className="font-syne" style={{ fontSize: '24px', fontWeight: 'bold', color: '#fff', marginBottom: '16px' }}>Risk Permissions</h3>
+                <p style={{ color: '#94a3b8', fontSize: '14px', lineHeight: 1.6 }}>Automatically escalate security requirements based on the predicted impact of the agent&apos;s request using our intent parser.</p>
+              </div>
+              
+              <div style={{ backgroundColor: '#111118', border: '1px solid rgba(255,255,255,0.05)', padding: '40px', borderRadius: '24px', display: 'flex', flexDirection: 'column' }}>
+                <FileText style={{ color: '#a78bfa', marginBottom: '24px' }} size={40} strokeWidth={1.5} />
+                <h3 className="font-syne" style={{ fontSize: '32px', fontWeight: 'bold', color: '#fff', marginBottom: '16px' }}>Full Forensic Audit</h3>
+                <p style={{ color: '#94a3b8', lineHeight: 1.6, marginBottom: '24px' }}>Every prompt intent and API call made by your AI is recorded, correlated, and stored in an immutable ledger for compliance.</p>
+                <div style={{ backgroundColor: '#0a0a0f', borderRadius: '12px', padding: '20px', fontFamily: 'monospace', fontSize: '10px', color: 'rgba(196, 181, 253, 0.8)', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column' }}>
+                  <div style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '12px', marginBottom: '12px', fontWeight: 'bold', letterSpacing: '2px', color: 'rgba(255,255,255,0.5)' }}>LOG_ID: 982-PX</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>ACT:</span><span style={{ color: '#cbd5e1' }}>gmail.send</span></div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>SIG:</span><span style={{ color: '#4cd7f6', fontWeight: 'bold' }}>VERIFIED_MFA</span></div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        {/* ── Final CTA ──────────────────────────────────────────────────────── */}
+        <div style={{ width: '100%', paddingBottom: '100px' }}>
+          <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 24px', width: '100%' }}>
+            <div style={{ width: '100%', borderRadius: '40px', backgroundColor: '#111118', padding: '80px 48px', textAlign: 'center', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <h2 className="font-syne" style={{ fontSize: 'clamp(32px, 5vw, 60px)', fontWeight: 'bold', color: '#fff', marginBottom: '32px', lineHeight: 1.2 }}>Ready to Secure Your <br/>Agentic Future?</h2>
+              <p style={{ color: '#94a3b8', fontSize: '18px', marginBottom: '48px', maxWidth: '600px', margin: '0 auto 48px auto' }}>
+                Join advanced security teams who are building the next generation of AI products with deterministic safety.
+              </p>
+              
+              <div style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: '24px', width: '100%' }}>
+                <Link href="/auth/login" style={{ padding: '20px 40px', backgroundColor: '#fff', color: '#000', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', borderRadius: '12px', textTransform: 'uppercase', letterSpacing: '2px', fontSize: '14px', textDecoration: 'none' }}>
+                  Launch Console <ArrowRight size={16} />
+                </Link>
+                <Link href="/dashboard/policies" style={{ padding: '20px 40px', backgroundColor: '#0a0a0f', color: '#fff', fontWeight: 'bold', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.2)', textTransform: 'uppercase', letterSpacing: '2px', fontSize: '14px', textDecoration: 'none' }}>
+                  View Demo Rules
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </main>
     </div>
   );
 }

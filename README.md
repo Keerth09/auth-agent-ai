@@ -25,11 +25,12 @@ When you authorize an AI agent to "act on your behalf," they typically receive r
 
 1. **🔐 Auth0 Token Vault Integration:** Tokens are stored entirely within Auth0. The Next.js middleware retrieves them dynamically per-request.
 2. **🛡️ 3-Tier Permission Engine (Deny-by-Default):**
-   - 🟢 **READ Actions** (`gmail.read`): Auto-approved and proxied.
-   - 🟠 **WRITE Actions** (`gmail.send`): Quarantined pending Human-in-the-Loop review via the dashboard.
-   - 🔴 **DESTRUCTIVE Actions** (`gmail.delete`): Instantly blocked and triggers an Auth0 MFA step-up authentication flow.
-3. **📋 Cryptographic Audit Ledger:** An immutable SQLite ledger records every single action, risk level, token fingerprint, and response.
-4. **🎨 Premium UI/UX:** Built with Tailwind CSS, Next.js App Router, and Framer-grade CSS animations to deliver a world-class Auth0 security product aesthetic.
+   - 🟢 **READ Actions** (`gmail.read`): Auto-approved and proxied through LLaMA Intent Analyzers.
+   - 🟠 **WRITE Actions** (`gmail.send`): Quarantined pending Human-in-the-Loop review via the native dashboard approval queue.
+   - 🔴 **DESTRUCTIVE Actions** (`gmail.delete`): Sent strictly to Human-in-the-Loop queue (previously step-up auth) to ensure maximum oversight.
+3. **📋 Cryptographic Audit Ledger:** An immutable SQLite ledger securely tracks every interaction, blocking execution if tampering is detected.
+4. **🧠 LLaMA 3 Intent Router:** Deep integration with Groq to instantly decompose human language ("send an email to Alex") into structured JSON constraints natively compatible with the `googleapis` connector.
+5. **🎨 Premium SVG Interface:** Built entirely with Tailwind CSS, Next.js flexbox layout patterns, and fully vector `lucide-react` dashboard components. No emojis, no placeholders, full production readiness.
 
 ## 📸 Dashboard & Control Center
 
@@ -48,15 +49,15 @@ sequenceDiagram
 
     User->>Agent: "Summarize my last 5 emails"
     Agent->>Proxy: POST /api/agent/run
-    Proxy->>Proxy: Parse Intent (gmail.read)
+    Proxy->>Proxy: Parse Intent via LLaMA (summarize)
     Proxy->>Proxy: Evaluate Permission Engine
     
     note over Proxy, Auth0: Read = Auto Approve
     Proxy->>Auth0: Fetch Token (Subject: userID)
     Auth0-->>Proxy: Ephemeral Bearer Token
 
-    Proxy->>API: Inject Header & Execute Request
-    API-->>Proxy: HTTP 200 OK (Data)
+    Proxy->>API: Execute request via `googleapis` / Axios
+    API-->>Proxy: HTTP 200 OK (Email Data)
     
     Proxy->>Proxy: Destroy Token from memory
     Proxy-->>Agent: Action Result (Data Only)
@@ -65,7 +66,8 @@ sequenceDiagram
 ## 💻 Tech Stack
 - **Framework:** Next.js 16 (App Router + React Server Components)
 - **Auth & IAM:** Auth0
-- **Token Storage:** Auth0 Token Vault Management API 
+- **AI Core:** LLaMA 3 (via Groq API) for zero-latency Intent Parsing
+- **API Engine:** `googleapis` Native OAuth2 Integration
 - **Database:** SQLite (Better-SQLite3) for audit logs
 - **Styling:** Tailwind CSS + CSS Variables Dark Mode
 - **Icons:** Lucide React

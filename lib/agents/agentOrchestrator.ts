@@ -6,10 +6,10 @@
  * - Token Vault is called FRESHLY per action — no token caching across actions
  * - Any action requiring approval is queued and never auto-executed
  * - All steps are logged to the audit trail
- * - Task decomposition is deterministic (keyword-based) for hackathon reliability
+ * - Task decomposition powered by LLaMA 3 (Groq) with keyword fallback
  *
  * Flow:
- *   runAgent() → decompose task → for each action:
+ *   runAgent() → analyzeIntent (LLaMA 3 / fallback) → for each action:
  *     1. permission engine evaluation
  *     2. if allow → execute via connector → log success/failure
  *     3. if require_approval → queue pending action → log pending
@@ -30,7 +30,7 @@ import {
   resolvePendingAction,
   listPendingActions,
 } from '@/lib/agents/agentRunner';
-import { readEmails, listEmailSummaries, sendEmail, deleteEmail } from '@/lib/connectors/gmailConnector';
+import { readEmails, sendEmail, deleteEmail } from '@/lib/connectors/gmailConnector';
 import {
   AgentTask,
   AgentAction,
@@ -38,126 +38,106 @@ import {
   ActionName,
   TaskDecomposition,
 } from '@/lib/agents/agentTask.types';
-import { ApprovalRequiredError, StepUpAuthRequired, AgentError, NotFoundError } from '@/lib/errors';
+import { AgentError, NotFoundError } from '@/lib/errors';
+import { analyzeIntent, intentToTaskDecomposition } from '@/lib/intentAnalyzer';
 
 // ── Task Decomposition ────────────────────────────────────────────────────────
 
 /**
  * Decompose a natural language task into discrete agent actions.
  *
- * For production this would use an LLM with function-calling.
- * For the hackathon we use deterministic keyword matching which is
- * more reliable and doesn't introduce LLM API key dependencies.
+ * Powered by LLaMA 3-70B via Groq for semantic understanding.
+ * Falls back to keyword matching automatically if Groq is unavailable.
+ * The permission engine, approval flows, and audit logs are applied
+ * identically regardless of which decomposition path ran.
  */
-function decomposeTask(task: string): TaskDecomposition {
-  const lower = task.toLowerCase();
-  const actions: TaskDecomposition['actions'] = [];
+async function decomposeTask(task: string): Promise<TaskDecomposition> {
+  const analysis = await analyzeIntent(task);
 
-  // Reading/summarizing emails
-  if (
-    lower.includes('email') &&
-    (lower.includes('read') || lower.includes('summariz') || lower.includes('check') || lower.includes('show') || lower.includes('list') || lower.includes('get'))
-  ) {
-    actions.push({
-      name: 'read_email',
-      params: { maxResults: 5, format: 'summary' },
-    });
+  if (analysis.tasks.length === 0) {
+    throw new AgentError(
+      `No actionable tasks identified in: "${task}". ` +
+      'Try: read/summarize emails, send email to <address>, delete email.'
+    );
   }
 
-  // Sending email
-  if (lower.includes('send') && lower.includes('email')) {
-    // Extract recipient if present (basic parsing)
-    const toMatch = lower.match(/to\s+([a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,})/);
-    const subjectMatch = task.match(/subject[:\s]+['""]?([^'""\n,]+)['""]?/i);
-
-    actions.push({
-      name: 'send_email',
-      params: {
-        to: toMatch?.[1] || 'recipient@example.com',
-        subject: subjectMatch?.[1]?.trim() || 'Message from ACC Agent',
-        body: `This email was sent by the ACC AI Agent on behalf of the user.\n\nOriginal task: "${task}"`,
-      },
-    });
-  }
-
-  // Deleting emails
-  if (lower.includes('delete') && lower.includes('email')) {
-    actions.push({
-      name: 'delete_email',
-      params: { targetDescription: task },
-    });
-  }
-
-  // Generic data deletion
-  if (lower.includes('delete') && lower.includes('data')) {
-    actions.push({ name: 'delete_data', params: { targetDescription: task } });
-  }
-
-  // Fallback — if no action recognized
-  if (actions.length === 0) {
-    if (lower.includes('email')) {
-      actions.push({
-        name: 'read_email',
-        params: { maxResults: 3, format: 'summary' },
-      });
-    } else {
-      throw new AgentError(
-        `Cannot decompose task: "${task}". ` +
-        'Supported tasks: read/summarize emails, send email to <address>, delete email.'
-      );
-    }
-  }
-
-  return {
-    actions,
-    connection: process.env.AUTH0_CONNECTION_GOOGLE || 'google-oauth2',
-    summary: `Decomposed into ${actions.length} action(s): ${actions.map((a) => a.name).join(', ')}`,
-  };
+  return intentToTaskDecomposition(analysis);
 }
 
 // ── Action Execution ──────────────────────────────────────────────────────────
 
-async function executeAction(
+async function handleAIAction(
   action: AgentAction,
   userId: string,
   connection: string
 ): Promise<unknown> {
   // Fetch fresh token from Token Vault for each action
+  console.log(`\n\n======================================================`);
+  console.log(`🚀 [handleAIAction] PIPELINE STARTED`);
+  console.log(`======================================================`);
+  console.log(`🔑 [handleAIAction] Fetching token for connection: ${connection}`);
   const accessToken = await getTokenForConnection(userId, connection);
   const tokenFingerprint = maskToken(accessToken);
+  console.log(`🔑 [handleAIAction] Token acquired, fingerprint: ${tokenFingerprint}`);
 
   try {
     let result: unknown;
+    console.log(`\n⚙️ [handleAIAction] EXECUTING ACTION: ${action.name}`);
+    console.log(`📦 [handleAIAction] AI Output / Params:`, JSON.stringify(action.params, null, 2));
 
     switch (action.name) {
       case 'read_email':
       case 'list_emails': {
         const maxResults = (action.params.maxResults as number) || 5;
+        console.log(`📧 [handleAIAction] Calling Gmail API -> readEmails(${maxResults})`);
         result = await readEmails(accessToken, maxResults);
+        console.log(`✅ [handleAIAction] Response: Read ${Array.isArray(result) ? result.length : 0} emails`);
+        break;
+      }
+      case 'summarize_emails': {
+        const maxResults = (action.params.maxResults as number) || 5;
+        console.log(`🧠 [handleAIAction] Calling summarize function -> fetching ${maxResults} emails`);
+        const emails = await readEmails(accessToken, maxResults);
+        
+        console.log(`🧠 [handleAIAction] Summarizing ${emails.length} emails...`);
+        if (emails.length === 0) {
+          result = "No emails found to summarize.";
+        } else {
+          // Minimal local summarization fallback acting as LLM logic
+          const summaryPoints = emails.map(e => `• From ${e.from}: ${e.subject} - "${e.snippet.slice(0, 50)}..."`);
+          result = `Summarized ${emails.length} recent emails:\n${summaryPoints.join('\n')}`;
+        }
+        console.log(`✅ [handleAIAction] Response: \n${result}`);
         break;
       }
       case 'send_email': {
-        const { to, subject, body } = action.params as {
-          to: string;
-          subject: string;
-          body: string;
-        };
+        // Supporting both "recipient" and "to" variants from AI output
+        const to = (action.params.recipient as string) || (action.params.to as string);
+        const subject = action.params.subject as string;
+        const body = action.params.body as string;
+        
+        console.log(`📤 [handleAIAction] Calling Gmail API -> sendEmail(to: ${to})`);
         result = await sendEmail(accessToken, to, subject, body);
+        console.log(`✅ [handleAIAction] Response: Email sent successfully, ID: ${(result as any)?.messageId || 'N/A'}`);
         break;
       }
-      case 'delete_email': {
-        // Extraction for destructive delete (requires target ID or search)
-        // For the hackathon demo, we take the last received message or search for keywords
+      case 'delete_email':
+      case 'delete_data': {
+        console.log(`🗑️ [handleAIAction] Calling delete function...`);
         const maxResults = 1;
         const messages = await readEmails(accessToken, maxResults);
         if (messages.length > 0) {
+          console.log(`🗑️ [handleAIAction] Targeting data ID: ${messages[0].id} for deletion`);
           result = await deleteEmail(accessToken, messages[0].id);
+          console.log(`✅ [handleAIAction] Response: Data deleted successfully.`);
         } else {
-          result = { status: 'no_messages_found' };
+          console.log(`⚠️ [handleAIAction] Response: No data found to delete.`);
+          result = { status: 'no_data_found' };
         }
         break;
       }
       default:
+        console.error(`❌ [handleAIAction] No routing logic implemented for action: ${action.name}`);
         throw new AgentError(`No connector implemented for action: ${action.name}`);
     }
 
@@ -173,8 +153,10 @@ async function executeAction(
       metadata: { connection },
     });
 
+    console.log(`🏁 [handleAIAction] PIPELINE COMPLETED SUCCESSFULLY\n======================================================\n`);
     return result;
   } catch (err: unknown) {
+    console.error(`❌ [handleAIAction] Error executing action:`, err);
     await auditLog({
       id: uuidv4(),
       userId,
@@ -196,9 +178,11 @@ function getScopesForAction(action: string): string {
   const scopeMap: Record<string, string> = {
     read_email: 'https://www.googleapis.com/auth/gmail.readonly',
     list_emails: 'https://www.googleapis.com/auth/gmail.readonly',
+    summarize_emails: 'https://www.googleapis.com/auth/gmail.readonly',
     send_email: 'https://www.googleapis.com/auth/gmail.send',
     reply_email: 'https://www.googleapis.com/auth/gmail.send',
     delete_email: 'https://www.googleapis.com/auth/gmail.modify',
+    delete_data: 'https://www.googleapis.com/auth/gmail.modify',
   };
   return scopeMap[action] || 'unknown';
 }
@@ -235,8 +219,10 @@ export async function runAgent(
   });
 
   try {
-    // 2. Decompose task
-    const decomposition = decomposeTask(task);
+    // 2. Decompose task via LLaMA 3 / keyword fallback
+    console.log(`🧠 [runAgent] Decomposing task: "${task}"`);
+    const decomposition = await decomposeTask(task);
+    console.log(`📋 [runAgent] Decomposed to ${decomposition.actions.length} action(s): ${decomposition.actions.map(a => a.name).join(', ')}`);
 
     // 3. Build action list with permission evaluations
     const actions: AgentAction[] = decomposition.actions.map((a) => ({
@@ -277,14 +263,17 @@ export async function runAgent(
 
       if (isImmediatelyExecutable(permResult.decision)) {
         // ── ALLOW: Execute immediately ──────────────────────────────────────
+        console.log(`⚡ [runAgent] Executing action: ${action.name} with params:`, action.params);
         action.status = 'running';
         updateAgentActions(run.id, actions);
 
         try {
-          action.result = await executeAction(action, userId, decomposition.connection);
+          action.result = await handleAIAction(action, userId, decomposition.connection);
+          console.log(`✅ [runAgent] Action completed: ${action.name}`);
           action.status = 'completed';
           completedCount++;
         } catch (err: unknown) {
+          console.log(`❌ [runAgent] Action failed: ${action.name} - ${err instanceof Error ? err.message : String(err)}`);
           action.error = err instanceof Error ? err.message : String(err);
           action.status = 'failed';
           hasFailed = true;
@@ -446,7 +435,7 @@ export async function executeApprovedAction(
   };
 
   try {
-    const result = await executeAction(agentAction, userId, connection);
+    const result = await handleAIAction(agentAction, userId, connection);
 
     await auditLog({
       id: uuidv4(),

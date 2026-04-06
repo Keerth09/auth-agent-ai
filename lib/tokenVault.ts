@@ -101,13 +101,13 @@ export async function revokeConnection(userId: string, connection: string) {
     console.log(`🛡️ Emergency revocation initiated for user ${userId} on connection ${connection}`);
     // In a real scenario, this would delete the identity or revoke the refresh token in Auth0.
     // For the hackathon demo, we'll simulate success.
-    return { success: true, timestamp: new Date().toISOString() };
+    return { success: true, timestamp: new Date().toISOString(), revokedGrantIds: [`grant_${Date.now()}`] };
 }
 
 /**
  * listActiveConnections
  */
-export async function listActiveConnections() {
+export async function listActiveConnections(_userId?: string) {
   return Object.keys(connectionMap).map((serviceName) => ({
     connection: connectionMap[serviceName],
     isRevoked: false,

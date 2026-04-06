@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { CheckCircle, XCircle, Check } from "lucide-react";
 
 interface PendingAction {
   id: string;
@@ -24,8 +25,9 @@ function Toast({ toast, onClose }: { toast: ToastType; onClose: () => void }) {
   return (
     <div
       className={`toast ${toast.type === "success" ? "toast-success" : "toast-error"}`}
+      style={{ display: "flex", alignItems: "center", gap: "8px" }}
     >
-      {toast.type === "success" ? "✅" : "❌"} {toast.message}
+      {toast.type === "success" ? <CheckCircle size={16} /> : <XCircle size={16} />} {toast.message}
     </div>
   );
 }
@@ -175,9 +177,10 @@ export default function ApprovalsPage() {
               fontSize: 36,
               marginBottom: 24,
               animation: "float 4s ease-in-out infinite",
+              color: "#10b981",
             }}
           >
-            ✅
+            <Check size={36} strokeWidth={3} />
           </div>
           <h2
             style={{
@@ -296,20 +299,21 @@ export default function ApprovalsPage() {
                     className="btn-approve"
                     disabled={processingId === item.id}
                     onClick={() => handleApprove(item.id)}
-                    style={{ flex: 1 }}
+                    style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}
                   >
                     {processingId === item.id ? (
                       <div className="spinner-sm" />
-                    ) : null}
-                    ✅ Approve
+                    ) : <CheckCircle size={16} />}
+                    Approve
                   </button>
                   <button
                     className="btn-deny"
                     disabled={processingId === item.id}
                     onClick={() => handleDeny(item.id)}
-                    style={{ flex: 1 }}
+                    style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}
                   >
-                    ❌ Deny
+                    <XCircle size={16} />
+                    Deny
                   </button>
                 </div>
               </div>

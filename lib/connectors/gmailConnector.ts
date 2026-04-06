@@ -9,6 +9,7 @@
  */
 
 import axios from 'axios';
+import { google } from 'googleapis';
 import { TokenVaultError } from '@/lib/errors';
 
 const GMAIL_API_BASE = 'https://gmail.googleapis.com/gmail/v1/users/me';
@@ -135,6 +136,10 @@ export async function sendEmail(
   subject: string,
   body: string
 ): Promise<SendEmailResult> {
+  const auth = new google.auth.OAuth2();
+  auth.setCredentials({ access_token: accessToken });
+  const gmail = google.gmail({ version: 'v1', auth });
+
   // Construct RFC 2822 email
   const emailLines = [
     `To: ${to}`,
@@ -154,25 +159,17 @@ export async function sendEmail(
     .replace(/=+$/, '');
 
   try {
-    const response = await axios.post<{
-      id: string;
-      threadId: string;
-      labelIds: string[];
-    }>(
-      `${GMAIL_API_BASE}/messages/send`,
-      { raw: encodedEmail },
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+    const response = await gmail.users.messages.send({
+      userId: 'me',
+      requestBody: {
+        raw: encodedEmail,
+      },
+    });
 
     return {
-      messageId: response.data.id,
-      threadId: response.data.threadId,
-      labelIds: response.data.labelIds,
+      messageId: response.data.id || '',
+      threadId: response.data.threadId || '',
+      labelIds: response.data.labelIds || [],
       status: 'sent',
     };
   } catch (err: unknown) {

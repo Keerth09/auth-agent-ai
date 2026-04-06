@@ -41,6 +41,7 @@ export interface AgentAction {
 /** Known action names — extend as more connectors are added */
 export type ActionName =
   | 'read_email'
+  | 'summarize_emails'
   | 'list_emails'
   | 'send_email'
   | 'reply_email'

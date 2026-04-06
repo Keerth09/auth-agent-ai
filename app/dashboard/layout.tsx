@@ -4,6 +4,10 @@ import { useEffect, useState, useCallback } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import VaultProxyLogo from "@/components/VaultProxyLogo";
+import { 
+  AlertTriangle, Lock, Shield, ClipboardList, LayoutDashboard, 
+  Bot, Zap, PauseCircle, FileText, Settings, Key, ShieldAlert
+} from "lucide-react";
 
 interface User {
   name?: string;
@@ -15,23 +19,46 @@ interface User {
 interface NavItem {
   id: string;
   label: string;
-  icon: string;
+  icon: React.ReactNode;
   href: string;
   badge?: string | number | null;
   badgeColor?: string;
+}
+
+function ThreatTicker({ pendingCount }: { pendingCount: number }) {
+  if (pendingCount === 0) return null;
+  const msg = `⚠ ${pendingCount} ACTION${pendingCount > 1 ? 'S' : ''} INTERCEPTED — Awaiting human authorization`;
+  return (
+    <div className="ticker-bar">
+      <div className="ticker-label">
+        <div className="dot-live" />
+        <span>INTERCEPT ACTIVE</span>
+      </div>
+      <div style={{ overflow: "hidden", flex: 1, height: "100%", display: "flex", alignItems: "center" }}>
+        <div className="ticker-content" style={{ fontFamily: "var(--font-mono)", fontSize: 9, color: "rgba(248,113,113,0.65)", letterSpacing: "0.16em", textTransform: "uppercase" }}>
+          <span style={{ display: "flex", alignItems: "center", gap: "6px" }}><AlertTriangle size={12} /> {msg}</span>
+          <span style={{ display: "flex", alignItems: "center", gap: "6px" }}><Lock size={12} /> VaultProxy Zero-Trust Runtime — All agent actions proxied &amp; logged</span>
+          <span style={{ display: "flex", alignItems: "center", gap: "6px" }}><ShieldAlert size={12} /> Human-in-Loop gate engaged — Step-up auth required for DESTRUCTIVE actions</span>
+          <span style={{ display: "flex", alignItems: "center", gap: "6px" }}><AlertTriangle size={12} /> {msg}</span>
+          <span style={{ display: "flex", alignItems: "center", gap: "6px" }}><Lock size={12} /> VaultProxy Zero-Trust Runtime — All agent actions proxied &amp; logged</span>
+          <span style={{ display: "flex", alignItems: "center", gap: "6px" }}><ShieldAlert size={12} /> Human-in-Loop gate engaged — Step-up auth required for DESTRUCTIVE actions</span>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function SecurityStatusBar() {
   return (
     <div className="security-status-bar">
       {[
-        { icon: "🔐", label: "Token Vault", value: "Connected", ok: true },
-        { icon: "🛡️", label: "Permission Engine", value: "Active", ok: true },
-        { icon: "📋", label: "Session", value: "Secure (HTTP-only)", ok: true },
+        { icon: <Lock size={14} />, label: "Token Vault", value: "Connected", ok: true },
+        { icon: <Shield size={14} />, label: "Permission Engine", value: "Active", ok: true },
+        { icon: <ClipboardList size={14} />, label: "Session", value: "Secure (HTTP-only)", ok: true },
       ].map((s) => (
         <div key={s.label} className="status-indicator">
           <div className={`status-dot ${s.ok ? "green" : "red"}`} />
-          <span>
+          <span style={{ display: "flex", alignItems: "center", gap: "4px" }}>
             {s.icon} {s.label}:&nbsp;
           </span>
           <span className={s.ok ? "status-value-green" : "status-value-red"}>
@@ -52,7 +79,6 @@ export default function DashboardLayout({
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [pendingCount, setPendingCount] = useState(0);
-  const [vaultOk] = useState(true);
 
   const fetchPendingCount = useCallback(async () => {
     try {
@@ -92,35 +118,30 @@ export default function DashboardLayout({
   }, [fetchPendingCount]);
 
   const navItems: NavItem[] = [
-    { id: "dashboard", label: "Dashboard", icon: "📊", href: "/dashboard" },
-    { id: "run", label: "Run Agent", icon: "⚡", href: "/dashboard/run" },
+    { id: "dashboard", label: "Dashboard",   icon: <LayoutDashboard size={20} />, href: "/dashboard" },
+    { id: "agents",    label: "Agent Fleet",  icon: <Bot size={20} />, href: "/dashboard/agents" },
+    { id: "run",       label: "Run Agent",    icon: <Zap size={20} />, href: "/dashboard/run" },
     {
       id: "approvals",
       label: "Approvals",
-      icon: "⏸️",
+      icon: <PauseCircle size={20} />,
       href: "/dashboard/approvals",
       badge: pendingCount > 0 ? pendingCount : null,
       badgeColor: "bg-red-500",
     },
-    {
-      id: "vault",
-      label: "Token Vault",
-      icon: "🔐",
-      href: "/dashboard/vault",
-      badge: vaultOk ? "●" : "!",
-      badgeColor: vaultOk ? "text-green-400" : "text-red-400",
-    },
-    { id: "audit", label: "Audit Logs", icon: "📋", href: "/dashboard/audit" },
-    { id: "settings", label: "Settings", icon: "⚙️", href: "/dashboard/settings" },
+    { id: "policies", label: "Zero-Trust Policies", icon: <FileText size={20} />, href: "/dashboard/policies" },
+    { id: "audit",    label: "Audit Log",          icon: <ClipboardList size={20} />, href: "/dashboard/audit" },
+    { id: "settings", label: "Settings",            icon: <Settings size={20} />, href: "/dashboard/settings" },
   ];
 
   const getActiveId = () => {
     if (pathname === "/dashboard") return "dashboard";
-    if (pathname.startsWith("/dashboard/run")) return "run";
+    if (pathname.startsWith("/dashboard/agents"))   return "agents";
+    if (pathname.startsWith("/dashboard/run"))       return "run";
     if (pathname.startsWith("/dashboard/approvals")) return "approvals";
-    if (pathname.startsWith("/dashboard/vault")) return "vault";
-    if (pathname.startsWith("/dashboard/audit")) return "audit";
-    if (pathname.startsWith("/dashboard/settings")) return "settings";
+    if (pathname.startsWith("/dashboard/policies"))  return "policies";
+    if (pathname.startsWith("/dashboard/audit"))     return "audit";
+    if (pathname.startsWith("/dashboard/settings"))  return "settings";
     return "";
   };
   const activeId = getActiveId();
@@ -155,9 +176,10 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="dashboard-screen">
+    <div className="dashboard-screen" style={{ paddingTop: pendingCount > 0 ? 28 : 0 }}>
+      <ThreatTicker pendingCount={pendingCount} />
       {/* ── Sidebar ───────────────────────────────────────────────── */}
-      <aside className="sidebar">
+      <aside className="sidebar" style={{ top: pendingCount > 0 ? 28 : 0, height: pendingCount > 0 ? "calc(100vh - 28px)" : "100vh" }}>
         {/* Logo */}
         <div style={{ padding: "24px 16px 16px" }}>
           <VaultProxyLogo variant="sidebar" href="/dashboard" />

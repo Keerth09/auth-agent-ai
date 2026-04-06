@@ -1,20 +1,16 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { parseIntent } from "@/lib/intentParser";
-import { evaluatePermission } from "@/lib/permissions";
 import { 
-  Zap, 
-  Terminal, 
   ShieldAlert, 
   Lock, 
-  Key,
   Fingerprint,
   Activity,
-  CheckCircle2,
-  Eye,
-  EyeOff,
+  Brain,
+  Sparkles,
+  AlertTriangle,
+  Shield,
 } from "lucide-react";
 
 type Risk = "READ" | "WRITE" | "DESTRUCTIVE";
@@ -34,10 +30,31 @@ interface RunResult {
   authUrl?: string;
 }
 
+interface IntentTask {
+  action: string;
+  resource: string;
+  risk: "READ" | "WRITE" | "DESTRUCTIVE";
+  confidence: number;
+  details: string;
+  content?: string;
+  security_reason?: string;
+}
+
+interface IntentAnalysis {
+  tasks: IntentTask[];
+  raw_intent: string;
+  source: "llm" | "keyword_fallback";
+  model?: string | null;
+}
+
 function SecurityModal({ onSuccess }: { onSuccess: () => void }) {
   const [pin, setPin] = useState("");
   const [attempts, setAttempts] = useState(0);
-  const [isLocked, setIsLocked] = useState(false);
+  const [isLocked, setIsLocked] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    const lockUntil = localStorage.getItem("vault_lockout");
+    return !!lockUntil && Number(lockUntil) > Date.now();
+  });
   const [scanning, setScanning] = useState(false);
   const [showQuestions, setShowQuestions] = useState(false);
   const [activeQuestion, setActiveQuestion] = useState(0);
@@ -51,14 +68,6 @@ function SecurityModal({ onSuccess }: { onSuccess: () => void }) {
     "What is your mother's maiden name?"
   ];
 
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const lockUntil = localStorage.getItem("vault_lockout");
-      if (lockUntil && Number(lockUntil) > Date.now()) {
-        setIsLocked(true);
-      }
-    }
-  }, []);
 
   const handleVerify = () => {
     if (pin === "1234") {
@@ -395,16 +404,60 @@ export default function RunPage() {
   const [runResult, setRunResult] = useState<RunResult | null>(null);
   const addStepRef = useRef<((s: ExecutionStep) => void) | null>(null);
 
-  // Dynamically interpret typing
+  // Intent Analyzer state
+  const [analysis, setAnalysis] = useState<IntentAnalysis | null>(null);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [analyzeError, setAnalyzeError] = useState<string | null>(null);
+  const analyzeDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [expandedContent, setExpandedContent] = useState<Record<number, boolean>>({});
+
+  // Debounced intent analysis — calls LLaMA 3 via Groq
+  const analyzeTask = useCallback(async (taskText: string) => {
+    if (!taskText.trim() || taskText.length < 3) {
+      setAnalysis(null);
+      setAnalyzeError(null);
+      return;
+    }
+    setAnalyzing(true);
+    setAnalyzeError(null);
+    try {
+      const res = await fetch("/api/agent/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ task: taskText }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error((err as { message?: string }).message || "Analysis failed");
+      }
+      const data: IntentAnalysis = await res.json();
+      setAnalysis(data);
+      // Sync the risk level badge from the first task
+      if (data.tasks.length > 0) {
+        setRiskLevel(data.tasks[0].risk as Risk);
+      }
+    } catch (err: unknown) {
+      setAnalyzeError(err instanceof Error ? err.message : "Analysis unavailable");
+    } finally {
+      setAnalyzing(false);
+    }
+  }, []);
+
+  // Watch task input — debounce 600ms before hitting Groq
   useEffect(() => {
-    if (!task) {
+    if (analyzeDebounceRef.current) clearTimeout(analyzeDebounceRef.current);
+    if (!task.trim()) {
+      setAnalysis(null);
       setRiskLevel("READ");
       return;
     }
-    const parsed = parseIntent(task);
-    const evaluation = evaluatePermission(parsed.service, parsed.action);
-    setRiskLevel(evaluation.risk as Risk);
-  }, [task]);
+    analyzeDebounceRef.current = setTimeout(() => {
+      analyzeTask(task);
+    }, 600);
+    return () => {
+      if (analyzeDebounceRef.current) clearTimeout(analyzeDebounceRef.current);
+    };
+  }, [task, analyzeTask]);
 
   addStepRef.current = (step: ExecutionStep) => {
     setSteps((prev) => [...prev, step]);
@@ -422,14 +475,17 @@ export default function RunPage() {
     setSteps([]);
     setRunResult(null);
 
-    // Step 1 — Parse intent
+    // Step 1 — Classify intent via LLaMA 3
     addStepRef.current!({
-      icon: "🔍",
-      label: "Parsing task intent...",
+      icon: "🧠",
+      label: "Classifying request with LLaMA 3...",
       status: "running",
     });
-    await delay(500);
-    updateLast({ status: "completed" });
+    await delay(400);
+    updateLast({ 
+      status: "completed",
+      detail: analysis ? `${analysis.source === 'llm' ? '🤖 LLaMA 3 (Groq)' : '🔤 Keyword'} · ${analysis.tasks.length} task(s) · Risk: ${riskLevel}` : `Risk: ${riskLevel}`,
+    });
 
     // Step 2 — Permission engine
     addStepRef.current!({
@@ -514,7 +570,7 @@ export default function RunPage() {
 
     updateLast({
       status: "completed",
-      detail: `Token fingerprint: ...${apiResult?.fingerprint ?? "a4f2"}`,
+      detail: `Token fingerprint: ...${(apiResult as { fingerprint?: string })?.fingerprint ?? "a4f2"}`,
     });
     await delay(300);
 
@@ -536,7 +592,7 @@ export default function RunPage() {
       detail: "Token was never stored · Audit log updated",
     });
 
-    setRunResult(apiResult);
+    setRunResult(apiResult as RunResult);
     setRunning(false);
   }
 
@@ -556,7 +612,8 @@ export default function RunPage() {
           Agent Execution
         </h1>
         <p style={{ color: "var(--text-secondary)", fontSize: 15 }}>
-          Zero-Trust Protocol Interface
+          Zero-Trust Protocol · Intent classified by{" "}
+          <span style={{ color: "#a78bfa", fontWeight: 700 }}>LLaMA 3 (Groq)</span>
         </p>
       </header>
 
@@ -1055,6 +1112,153 @@ export default function RunPage() {
           </div>
         </div>
       </div>
+
+      {/* ── INTENT ANALYZER PANEL ─────────────────────────────────────────────── */}
+      {task.trim().length >= 3 && (
+        <div
+          className="animate-fade-in"
+          style={{
+            marginTop: 28,
+            background: "rgba(8,8,14,0.85)",
+            border: "1px solid rgba(124,58,237,0.35)",
+            borderRadius: 20,
+            overflow: "hidden",
+          }}
+        >
+          {/* Header */}
+          <div
+            style={{
+              padding: "16px 28px",
+              borderBottom: "1px solid rgba(124,58,237,0.25)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              background: "rgba(124,58,237,0.05)",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <Brain size={16} style={{ color: "#a78bfa" }} />
+              <span style={{ fontSize: 11, fontWeight: 800, color: "var(--text-primary)", textTransform: "uppercase", letterSpacing: "0.18em" }}>
+                Intent Analyzer
+              </span>
+              {analyzing && (
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <div className="spinner-sm" style={{ borderColor: "#a78bfa #a78bfa transparent transparent" }} />
+                  <span style={{ fontSize: 10, color: "#a78bfa", fontWeight: 700, letterSpacing: "0.1em" }}>CLASSIFYING...</span>
+                </div>
+              )}
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 12px", background: analysis?.source === "llm" ? "rgba(124,58,237,0.15)" : "rgba(255,255,255,0.04)", border: analysis?.source === "llm" ? "1px solid rgba(124,58,237,0.4)" : "1px solid var(--border)", borderRadius: 99 }}>
+              {analysis?.source === "llm" ? (
+                <>
+                  <Sparkles size={10} style={{ color: "#a78bfa" }} />
+                  <span style={{ fontSize: 9, fontWeight: 800, color: "#a78bfa", letterSpacing: "0.1em", textTransform: "uppercase" }}>LLaMA 3 · Groq</span>
+                </>
+              ) : (
+                <span style={{ fontSize: 9, fontWeight: 700, color: "var(--text-muted)", letterSpacing: "0.1em", textTransform: "uppercase" }}>
+                  {analyzing ? "Connecting..." : analysis ? "Keyword Fallback" : "Waiting..."}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Body */}
+          <div style={{ padding: 24 }}>
+            {analyzeError && (
+              <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 16px", background: "rgba(239,68,68,0.07)", border: "1px solid rgba(239,68,68,0.25)", borderRadius: 12, marginBottom: 16 }}>
+                <AlertTriangle size={14} style={{ color: "#f87171", flexShrink: 0 }} />
+                <span style={{ fontSize: 12, color: "#f87171" }}>{analyzeError}</span>
+              </div>
+            )}
+
+            {!analyzing && !analysis && !analyzeError && (
+              <p style={{ textAlign: "center", padding: "24px 0", color: "var(--text-muted)", fontSize: 12, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.12em" }}>
+                Type a task above to classify intent...
+              </p>
+            )}
+
+            {analysis && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                {analysis.raw_intent && (
+                  <div style={{ padding: "8px 14px", background: "rgba(255,255,255,0.03)", border: "1px solid var(--border)", borderRadius: 8 }}>
+                    <span style={{ fontSize: 10, color: "var(--text-muted)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em" }}>Detected Intent: </span>
+                    <span style={{ fontSize: 12, color: "var(--text-secondary)", fontFamily: "var(--font-mono)" }}>&quot;{analysis.raw_intent}&quot;</span>
+                  </div>
+                )}
+
+                {analysis.tasks.map((t, i) => {
+                  const riskCfg = t.risk === "READ"
+                    ? { color: "#34d399", bg: "rgba(16,185,129,0.08)", border: "rgba(16,185,129,0.3)", label: "READ" }
+                    : t.risk === "WRITE"
+                    ? { color: "#fbbf24", bg: "rgba(245,158,11,0.08)", border: "rgba(245,158,11,0.3)", label: "WRITE" }
+                    : { color: "#f87171", bg: "rgba(239,68,68,0.08)", border: "rgba(239,68,68,0.3)", label: "DESTRUCTIVE" };
+
+                  const isExp = !!expandedContent[i];
+
+                  return (
+                    <div key={i} className="animate-slide-up" style={{ padding: 20, background: riskCfg.bg, border: `1px solid ${riskCfg.border}`, borderRadius: 16, animationDelay: `${i * 60}ms` }}>
+                      {/* Task header */}
+                      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14, flexWrap: "wrap" }}>
+                        {t.risk === "READ"
+                          ? <Shield size={13} style={{ color: "#34d399" }} />
+                          : <AlertTriangle size={13} style={{ color: riskCfg.color }} />}
+                        <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)", flex: 1 }}>
+                          {t.action.replace(/_/g, " ")}
+                        </span>
+                        <span style={{ padding: "3px 10px", borderRadius: 99, fontSize: 10, fontWeight: 800, color: riskCfg.color, background: `${riskCfg.color}18`, border: `1px solid ${riskCfg.border}`, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                          {riskCfg.label}
+                        </span>
+                        <span style={{ padding: "3px 10px", borderRadius: 99, fontSize: 10, fontWeight: 700, color: "var(--text-muted)", background: "rgba(255,255,255,0.04)", border: "1px solid var(--border)", textTransform: "uppercase" }}>
+                          {t.resource}
+                        </span>
+                      </div>
+
+                      {/* Details */}
+                      <p style={{ fontSize: 12, color: "var(--text-secondary)", marginBottom: 12, lineHeight: 1.5 }}>{t.details}</p>
+
+                      {/* Confidence bar */}
+                      <div style={{ marginBottom: (t.security_reason || t.content) ? 14 : 0 }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
+                          <span style={{ fontSize: 9, fontWeight: 800, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.12em" }}>Confidence</span>
+                          <span style={{ fontSize: 10, fontWeight: 800, color: riskCfg.color }}>{t.confidence}%</span>
+                        </div>
+                        <div style={{ height: 4, background: "rgba(255,255,255,0.06)", borderRadius: 99, overflow: "hidden" }}>
+                          <div style={{ height: "100%", width: `${t.confidence}%`, background: `linear-gradient(90deg, ${riskCfg.color}88, ${riskCfg.color})`, borderRadius: 99, transition: "width 0.8s cubic-bezier(0.4,0,0.2,1)" }} />
+                        </div>
+                      </div>
+
+                      {/* Security reason */}
+                      {t.security_reason && (
+                        <div style={{ display: "flex", alignItems: "flex-start", gap: 8, padding: "10px 12px", background: "rgba(0,0,0,0.25)", borderRadius: 10, marginBottom: t.content ? 12 : 0, border: `1px solid ${riskCfg.border}` }}>
+                          <AlertTriangle size={12} style={{ color: riskCfg.color, flexShrink: 0, marginTop: 1 }} />
+                          <p style={{ fontSize: 11, color: "var(--text-muted)", lineHeight: 1.5, margin: 0 }}>{t.security_reason}</p>
+                        </div>
+                      )}
+
+                      {/* Draft preview */}
+                      {t.content && (
+                        <div style={{ marginTop: 12 }}>
+                          <button
+                            onClick={() => setExpandedContent((prev) => ({ ...prev, [i]: !prev[i] }))}
+                            style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 10, fontWeight: 700, color: "#a78bfa", background: "transparent", border: "none", cursor: "pointer", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: isExp ? 10 : 0, padding: 0 }}
+                          >
+                            <Sparkles size={10} />{isExp ? "Hide Generated Draft" : "Show Generated Draft"}
+                          </button>
+                          {isExp && (
+                            <pre style={{ padding: 14, background: "rgba(0,0,0,0.4)", border: "1px solid rgba(124,58,237,0.3)", borderRadius: 10, fontSize: 11, fontFamily: "var(--font-mono)", color: "var(--text-secondary)", whiteSpace: "pre-wrap", lineHeight: 1.6, margin: 0 }}>
+                              {t.content}
+                            </pre>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
