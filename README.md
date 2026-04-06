@@ -106,7 +106,8 @@ Visit `http://localhost:3000` to dive into the Agent Control Center!
 
 ## 👥 Team
 **VaultProxy** was built by:
-- **Sai Dheeraj** ([@Keerth09](https://github.com/Keerth09))
+- **R Sai Dheeraj** ([@Saidheeraj](https://github.com/SaiDheeraj-19))
+- **A Keerthana**  ([@keerth09](https://github.com/Keerth09))
 
 *(If there are other team members, please feel free to add them here!)*
 
