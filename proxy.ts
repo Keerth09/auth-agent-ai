@@ -5,22 +5,39 @@ import { auth0 } from "@/lib/auth0";
  * VaultProxy — Next.js Middleware (proxy.ts)
  *
  * Route decision tree:
- *   OPTIONS         → 200 (CORS preflight)
- *   /api/auth/*     → auth0.middleware  (handles login / callback / logout)
- *   /api/*          → NextResponse.next()  (Route Handlers own their auth)
- *   everything else → auth0.middleware  (enforces session, redirects if missing)
+ *   OPTIONS          → 200 (CORS preflight)
+ *   _next/* internal → pass through (RSC payloads, HMR, prefetch)
+ *   /api/auth/*      → auth0.middleware (login / callback / logout)
+ *   /api/*           → pass through (Route Handlers own their auth)
+ *   /dashboard/*     → auth0.middleware (protected — redirects if no session)
+ *   / (landing page) → pass through (public)
+ *   everything else  → pass through (public)
  */
 
 export const config = {
+  // Only run on paths that aren't Next.js static assets
   matcher: [
     "/((?!_next/static|_next/image|favicon\\.ico).*)",
   ],
 };
 
 export default async function proxy(request: NextRequest) {
-  const { pathname } = request.nextUrl;
+  const { pathname, search } = request.nextUrl;
 
-  // ── CORS preflight ──────────────────────────────────────────────────────
+  // ── 1. Skip Next.js RSC / prefetch / HMR internals ─────────────────────
+  // These are browser-internal requests from Turbopack; auth middleware must
+  // never intercept them — doing so causes "Load failed" errors on the client.
+  if (
+    search.includes("_rsc") ||
+    request.headers.get("RSC") === "1" ||
+    request.headers.get("Next-Router-Prefetch") === "1" ||
+    request.headers.get("Next-Router-State-Tree") !== null ||
+    pathname.startsWith("/_next/")
+  ) {
+    return NextResponse.next();
+  }
+
+  // ── 2. CORS preflight ───────────────────────────────────────────────────
   if (request.method === "OPTIONS") {
     return new Response(null, {
       status: 200,
@@ -33,18 +50,23 @@ export default async function proxy(request: NextRequest) {
     });
   }
 
-  // ── Auth0 routes — MUST go through auth0.middleware ─────────────────────
+  // ── 3. Auth0 SDK routes ─────────────────────────────────────────────────
   // The SDK handles /api/auth/login, /api/auth/callback, /api/auth/logout
   if (pathname.startsWith("/api/auth/")) {
     return await auth0.middleware(request);
   }
 
-  // ── Data API routes — bypass auth middleware entirely ───────────────────
-  // Route Handlers return 401 JSON themselves when session is missing.
+  // ── 4. Data API routes — Route Handlers own their auth ──────────────────
   if (pathname.startsWith("/api/")) {
     return NextResponse.next();
   }
 
-  // ── All page routes — enforce session via auth0.middleware ───────────────
-  return await auth0.middleware(request);
+  // ── 5. Protected pages: /dashboard/* ────────────────────────────────────
+  // auth0.middleware will redirect to /api/auth/login if no valid session.
+  if (pathname.startsWith("/dashboard")) {
+    return await auth0.middleware(request);
+  }
+
+  // ── 6. Public routes (landing page, etc.) ───────────────────────────────
+  return NextResponse.next();
 }
