@@ -109,7 +109,5 @@ Visit `http://localhost:3000` to dive into the Agent Control Center!
 - **R Sai Dheeraj** ([@Saidheeraj](https://github.com/SaiDheeraj-19))
 - **A Keerthana**  ([@keerth09](https://github.com/Keerth09))
 
-*(If there are other team members, please feel free to add them here!)*
-
 ## 📄 License
 This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) file for more details.
