@@ -44,9 +44,9 @@ export async function POST(req: Request) {
     // Concatenate actual data (e.g. email contents) into the result text
     const resultData = run.result?.data;
     if (resultData && resultData.length > 0) {
-      const dataResults = resultData.map((d: { action: string; result: any }) => {
+      const dataResults = (resultData as Array<{ action: string; result: unknown }>).map((d) => {
         if (Array.isArray(d.result)) {
-           return d.result.map((item: any) => 
+           return (d.result as Array<{ from?: string; subject?: string; snippet?: string }>).map((item) => 
              `[${d.action}] ${item.from || "System"}: ${item.subject || "No Subject"}\n   ${item.snippet || ""}`
            ).join("\n\n");
         }
