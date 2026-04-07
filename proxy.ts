@@ -1,33 +1,50 @@
-/**
- * proxy.ts — Auth0 Edge Middleware
- *
- * Next.js 16 renamed the "middleware" file convention to "proxy".
- * This file intercepts every request and delegates to Auth0's middleware
- * which handles:
- *   - /api/auth/login       → Redirect to Auth0 Universal Login
- *   - /api/auth/callback    → Exchange code for session cookie
- *   - /api/auth/logout      → Clear session + redirect
- *   - All other routes      → Validate/refresh session cookie
- *
- * Dashboard route protection is handled client-side in the dashboard
- * layout (app/dashboard/layout.tsx) via the /api/auth/status endpoint.
- */
-
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { auth0 } from "@/lib/auth0";
 
-export default async function proxy(request: NextRequest) {
-  return await auth0.middleware(request);
-}
+/**
+ * VaultProxy — Next.js Middleware (proxy.ts)
+ *
+ * Route decision tree:
+ *   OPTIONS         → 200 (CORS preflight)
+ *   /api/auth/*     → auth0.middleware  (handles login / callback / logout)
+ *   /api/*          → NextResponse.next()  (Route Handlers own their auth)
+ *   everything else → auth0.middleware  (enforces session, redirects if missing)
+ */
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except static assets:
-     * - _next/static  (Next.js compiled assets)
-     * - _next/image   (Image optimization endpoint)
-     * - favicon.ico   (Browser favicon)
-     */
     "/((?!_next/static|_next/image|favicon\\.ico).*)",
   ],
 };
+
+export default async function proxy(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  // ── CORS preflight ──────────────────────────────────────────────────────
+  if (request.method === "OPTIONS") {
+    return new Response(null, {
+      status: 200,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization",
+        "Access-Control-Max-Age": "86400",
+      },
+    });
+  }
+
+  // ── Auth0 routes — MUST go through auth0.middleware ─────────────────────
+  // The SDK handles /api/auth/login, /api/auth/callback, /api/auth/logout
+  if (pathname.startsWith("/api/auth/")) {
+    return await auth0.middleware(request);
+  }
+
+  // ── Data API routes — bypass auth middleware entirely ───────────────────
+  // Route Handlers return 401 JSON themselves when session is missing.
+  if (pathname.startsWith("/api/")) {
+    return NextResponse.next();
+  }
+
+  // ── All page routes — enforce session via auth0.middleware ───────────────
+  return await auth0.middleware(request);
+}

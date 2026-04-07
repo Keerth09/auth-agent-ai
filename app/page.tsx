@@ -87,7 +87,7 @@ export default function LandingPage() {
             </p>
             
             <div style={{ display: 'flex', flexDirection: 'row', gap: '16px', marginBottom: '80px', flexWrap: 'wrap', justifyContent: 'center' }}>
-              <Link href="/auth/login" style={{ padding: '16px 32px', backgroundColor: '#7c3aed', color: '#fff', fontWeight: 'bold', borderRadius: '12px', textTransform: 'uppercase', letterSpacing: '2px', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
+              <Link href="/api/auth/login" style={{ padding: '16px 32px', backgroundColor: '#7c3aed', color: '#fff', fontWeight: 'bold', borderRadius: '12px', textTransform: 'uppercase', letterSpacing: '2px', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
                 Start Secure <ArrowRight size={16} />
               </Link>
               <Link href="/dashboard" style={{ padding: '16px 32px', backgroundColor: '#111118', color: '#fff', fontWeight: 'bold', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', textTransform: 'uppercase', letterSpacing: '2px', fontSize: '14px', textDecoration: 'none' }}>
@@ -251,7 +251,7 @@ export default function LandingPage() {
               </p>
               
               <div style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: '24px', width: '100%' }}>
-                <Link href="/auth/login" style={{ padding: '20px 40px', backgroundColor: '#fff', color: '#000', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', borderRadius: '12px', textTransform: 'uppercase', letterSpacing: '2px', fontSize: '14px', textDecoration: 'none' }}>
+                <Link href="/api/auth/login" style={{ padding: '20px 40px', backgroundColor: '#fff', color: '#000', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', borderRadius: '12px', textTransform: 'uppercase', letterSpacing: '2px', fontSize: '14px', textDecoration: 'none' }}>
                   Launch Console <ArrowRight size={16} />
                 </Link>
                 <Link href="/dashboard/audit" style={{ padding: '20px 40px', backgroundColor: '#0a0a0f', color: '#fff', fontWeight: 'bold', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.2)', textTransform: 'uppercase', letterSpacing: '2px', fontSize: '14px', textDecoration: 'none' }}>

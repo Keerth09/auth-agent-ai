@@ -96,17 +96,17 @@ export default function DashboardLayout({
       try {
         const res = await fetch("/api/auth/status");
         if (!res.ok) {
-        window.location.href = "/auth/login";
+        window.location.href = "/api/auth/login";
           return;
         }
         const data = await res.json();
         if (!data.authenticated) {
-        window.location.href = "/auth/login";
+        window.location.href = "/api/auth/login";
           return;
         }
         setUser(data.user);
       } catch {
-        window.location.href = "/auth/login";
+        window.location.href = "/api/auth/login";
       } finally {
         setLoading(false);
       }
