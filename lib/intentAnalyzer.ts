@@ -381,7 +381,7 @@ function validateAndSanitize(raw: unknown): IntentAnalysis {
     tasks,
     raw_intent: typeof obj.raw_intent === 'string' ? obj.raw_intent.slice(0, 200) : '',
     source: 'llm',
-    model: 'llama3-70b-8192',
+    model: 'llama-3.3-70b-versatile',
   };
 }
 
@@ -412,7 +412,7 @@ export async function analyzeIntent(userTask: string): Promise<IntentAnalysis> {
     // Strict 5-second timeout — never block user flow
     const completion = await Promise.race([
       groq.chat.completions.create({
-        model: 'llama3-70b-8192',
+        model: 'llama-3.3-70b-versatile',
         messages: [
           { role: 'system', content: SYSTEM_PROMPT },
           {

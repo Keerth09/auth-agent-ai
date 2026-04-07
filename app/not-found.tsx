@@ -60,7 +60,7 @@ function TypewriterLine({ text, delay = 0, color = "#94a3b8" }: { text: string; 
 
 function CounterNumber({ target }: { target: number }) {
   const [count, setCount] = useState(0);
-  const frameRef = useRef<ReturnType<typeof requestAnimationFrame>>();
+  const frameRef = useRef<number>(undefined);
 
   useEffect(() => {
     const start = Date.now();
