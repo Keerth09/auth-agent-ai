@@ -6,7 +6,7 @@ try {
   const envPath = path.resolve(process.cwd(), '.env.local');
   if (fs.existsSync(envPath)) {
     const envFile = fs.readFileSync(envPath, 'utf8');
-    envFile.split('\n').forEach(line => {
+    envFile.split('\n').forEach((line: string) => {
       const [key, ...value] = line.split('=');
       if (key && value.length > 0) {
         process.env[key.trim()] = value.join('=').trim();
