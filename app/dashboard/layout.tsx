@@ -251,7 +251,7 @@ export default function DashboardLayout({
             </div>
           </div>
           <a
-            href="/auth/logout"
+            href="/api/auth/logout"
             id="logout-btn"
             style={{
               display: "block",
