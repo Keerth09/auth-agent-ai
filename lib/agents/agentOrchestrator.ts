@@ -61,7 +61,16 @@ async function decomposeTask(task: string): Promise<TaskDecomposition> {
     );
   }
 
-  return intentToTaskDecomposition(analysis);
+  const extractedCount = parseInt((task.match(/\b(\d+)\b/) || [])[1]) || undefined;
+
+  const decomposition = intentToTaskDecomposition(analysis);
+  if (extractedCount) {
+    decomposition.actions.forEach(a => {
+      a.params = { ...a.params, maxResults: extractedCount };
+    });
+  }
+  
+  return decomposition;
 }
 
 // ── Action Execution ──────────────────────────────────────────────────────────
@@ -103,11 +112,14 @@ async function handleAIAction(
         if (emails.length === 0) {
           result = "No emails found to summarize.";
         } else {
-          // Minimal local summarization fallback acting as LLM logic
-          const summaryPoints = emails.map(e => `• From ${e.from}: ${e.subject} - "${e.snippet.slice(0, 50)}..."`);
-          result = `Summarized ${emails.length} recent emails:\n${summaryPoints.join('\n')}`;
+          // Return the array directly so the Route Handler gracefully formats it onto the dashboard
+          result = emails.map(e => ({
+            from: e.from,
+            subject: e.subject,
+            snippet: e.snippet.slice(0, 100) + '...'
+          }));
         }
-        console.log(`✅ [handleAIAction] Response: \n${result}`);
+        console.log(`✅ [handleAIAction] Response: Summarized ${emails.length} emails`);
         break;
       }
       case 'send_email': {
