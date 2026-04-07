@@ -61,14 +61,20 @@ async function decomposeTask(task: string): Promise<TaskDecomposition> {
     );
   }
 
+  const emailRegex = /([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/;
   const extractedCount = parseInt((task.match(/\b(\d+)\b/) || [])[1]) || undefined;
+  const extractedEmail = (task.match(emailRegex) || [])[1] || undefined;
 
   const decomposition = intentToTaskDecomposition(analysis);
-  if (extractedCount) {
-    decomposition.actions.forEach(a => {
+  
+  decomposition.actions.forEach(a => {
+    if (extractedCount) {
       a.params = { ...a.params, maxResults: extractedCount };
-    });
-  }
+    }
+    if (extractedEmail && (a.name === 'send_email' || a.name === 'reply_email')) {
+      a.params = { ...a.params, to: extractedEmail, recipient: extractedEmail };
+    }
+  });
   
   return decomposition;
 }
