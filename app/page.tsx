@@ -90,7 +90,7 @@ export default function LandingPage() {
               <Link href="/api/auth/login" style={{ padding: '16px 32px', backgroundColor: '#7c3aed', color: '#fff', fontWeight: 'bold', borderRadius: '12px', textTransform: 'uppercase', letterSpacing: '2px', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
                 Start Secure <ArrowRight size={16} />
               </Link>
-              <Link href="/dashboard" style={{ padding: '16px 32px', backgroundColor: '#111118', color: '#fff', fontWeight: 'bold', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', textTransform: 'uppercase', letterSpacing: '2px', fontSize: '14px', textDecoration: 'none' }}>
+              <Link href="/demo" style={{ padding: '16px 32px', backgroundColor: '#111118', color: '#fff', fontWeight: 'bold', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', textTransform: 'uppercase', letterSpacing: '2px', fontSize: '14px', textDecoration: 'none' }}>
                 View Demo
               </Link>
             </div>
